@@ -1,9 +1,5 @@
 <template>
-  <header class="app-header border-bottom bg-white">
-
-    <!-- =========================
-         DESKTOP HEADER
-    ========================== -->
+  <header class="app-header border-bottom bg-white">  
     <div
       class="app-header-inner
              d-flex
@@ -12,8 +8,7 @@
              px-3
              py-2"
     >
-
-      <!-- Logo -->
+      
       <a
         class="d-flex align-items-center gap-3 text-decoration-none"
         href="/"
@@ -24,12 +19,8 @@
           class="app-logo"
         />
       </a>
-
-
-      <!-- Right Side -->
-      <div class="app-header-end d-flex align-items-center">
-
-        <!-- Desktop Navigation -->
+      
+      <div class="app-header-end d-flex align-items-center">        
         <nav
           class="nav-link
                  d-none
@@ -53,15 +44,13 @@
             }"
             @click="activeNav = item.label"
           >
-
-            <!-- Icon -->
+            
             <component
               :is="item.icon"
               :size="18"
               :stroke-width="2"
             />
-
-            <!-- Label -->
+            
             <span>
               {{ item.label }}
             </span>

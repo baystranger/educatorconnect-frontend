@@ -54,7 +54,7 @@
               </div>
               <div class="text-end">
                 <span class="small text-muted d-block">Today</span>
-                <span class="badge bg-secondary-subtle text-balck rounded-pill">Sunshine Early Learning</span>
+                <span class="badge bg-primary text-balck rounded-pill">Sunshine Early Learning</span>
               </div>
             </div>
 

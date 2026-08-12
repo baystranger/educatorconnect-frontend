@@ -10,7 +10,7 @@
         <child-care :day-cares="daycares" />
       </section>
 
-      <section class="py-5" id="centres">
+      <section id="centres">
         <CenterCard />
       </section>
 
@@ -79,8 +79,7 @@ const navItems = [
   { label: 'Home', href: '#childcare', icon: Home },
   { label: 'Browse Jobs', href: '#steps', icon: Briefcase },
   { label: 'Educators', href: '#testimonials', icon: GraduationCap },
-  { label: 'Centers', href: '#centres', icon: Building2 },
-  { label: 'Sub Hub', href: '#steps', icon: Layers },
+  { label: 'Centers', href: '#centres', icon: Building2 },  
   { label: 'dayCares', href: '#childcare', icon: Home },
   { label: 'Sign Up', href: '/register', icon: UserPlus },
   { label: 'Login', href: '#register', icon: LogIn }

@@ -16,9 +16,9 @@
         </p>
 
         <div class="d-flex gap-3">
-          <a class="btn btn-primary" href="#childcare">Find dayCares →</a>
-          <a class="btn btn-light" href="#centers">For centers</a>
-          <a class="btn btn-primary" href="#jobs">Explore jobs</a>
+          <a class="btn btn-primary" href="#jobs">For Educators →</a>
+          <a class="btn btn-light" href="#centers">For centers →</a>
+          <a class="btn btn-primary" href="#childcare">For Parents →</a>
         </div>
 
         <div class="d-flex flex-wrap gap-3 mt-4">

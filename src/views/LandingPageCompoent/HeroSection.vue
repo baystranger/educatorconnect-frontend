@@ -1,72 +1,34 @@
 <template>
-  <section class="row align-items-center g-4 py-3 py-lg-4">
+  <section class="row align-items-center g-4 py-3 py-lg-4 hero-section mt-4">
     <!-- LEFT -->
     <div class="col-lg-7 position-relative">
       <div class="hero-glow"></div>
 
       <div class="position-relative">
-        <span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold">
-          One trusted early childhood ecosystem
+        <span class="rounded-pill bg-primary-subtle text-primary fw-semibold">
+          Where Canada's early years come together
         </span>
 
-        <h1 class="display-4 fw-bold mt-4 mb-3 text-dark">
-          {{ activeContent.heroTitle }}
+        <h1 class="display-4 fw-bold text-dark">
+          One hub for childcare centres, educators, and families
         </h1>
 
         <p class="lead text-muted mb-4">
-          {{ activeContent.heroDescription }}
+          Post your openings or your program, find a role that fits your life, or find the right daycare for your child — all in the same place.
         </p>
 
-        <!-- MENU BUTTONS -->
-        <div class="d-flex gap-3 flex-wrap">
-          <button
-            v-for="menu in menus"
-            :key="menu.key"
-            type="button"
-            class="btn"
-            :class="activeMenu === menu.key ? 'btn-primary' : 'btn-light'"
-            @click="changeSection(menu.key)"
-          >
-            {{ menu.label }}
-            <span v-if="menu.key === 'daycares'"> →</span>
-          </button>
-        </div>
+        <SearchPanel
+          :active-section="activeMenu"
+          @update:activeSection="changeSection"
+        />
 
-        <!-- FILTER TIPS -->
-        <div class="d-flex flex-wrap gap-3 mt-4">
-          <div
-            v-for="tip in activeContent.filterTips"
-            :key="tip.title"
-            class="d-flex align-items-start gap-3"
-          >
-            <span
-              class="avatar avatar-xs rounded-circle bg-primary-subtle text-primary
-                     d-flex align-items-center justify-content-center fw-semibold"
-            >
-              ✓
-            </span>
-
-            <div>
-              <h3 class="h6 mb-1 text-dark">
-                {{ tip.title }}
-              </h3>
-
-              <p
-                v-if="tip.description"
-                class="small text-muted mb-0"
-              >
-                {{ tip.description }}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
     <!-- RIGHT CARD -->
     <div class="col-lg-5">
       <div
-        class="card border-0 shadow-lg rounded-4 p-2 position-relative
+        class="card border-0 shadow-lg rounded-4 p-4 position-relative
                overflow-hidden mt-4 mt-lg-5 hero-panel"
         style="background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);"
       >
@@ -86,7 +48,7 @@
                 {{ activeContent.label }}
               </p>
 
-              <h3 class="h6 mb-1 text-dark">
+              <h3 class="h5 mb-2 text-dark">
                 {{ activeContent.cardTitle }}
               </h3>
 
@@ -95,7 +57,7 @@
               </p>
             </div>
 
-            <div class="d-flex flex-column align-items-end gap-1">
+            <div class="d-flex flex-column align-items-end gap-2">
               <span
                 class="badge rounded-pill bg-success-subtle text-success fw-semibold"
               >
@@ -174,8 +136,8 @@
                 </div>
 
                 <span
-                  class="badge rounded-pill bg-primary-subtle
-                         text-primary fw-semibold"
+                  class="badge side-badge rounded-pill bg-primary-subtle
+                         text-primary fw-semibold w-25"
                 >
                   {{ item.badge }}
                 </span>
@@ -232,6 +194,7 @@
 
 <script setup>
 import { computed, ref } from 'vue';
+import SearchPanel from './SearchPanel.vue';
 
 const emit = defineEmits([
   'change-section',
@@ -239,49 +202,38 @@ const emit = defineEmits([
   'explore'
 ]);
 
-const activeMenu = ref('daycares');
+const activeMenu = ref('educators');
 
 const menus = [
   {
-    key: 'daycares',
-    label: 'Find Daycares'
+    key: 'educators',
+    label: 'For Educators'
   },
   {
-    key: 'centers',
-    label: 'For Centers'
+    key: 'centres',
+    label: 'For Centres'
   },
   {
-    key: 'jobs',
-    label: 'Explore Jobs'
+    key: 'parents',
+    label: 'For Parents'
   }
 ];
 
 const sections = {
-  daycares: {
-    label: 'Featured',
-    cardTitle: 'Nearby daycares',
-    cardDescription: 'Find trusted childcare centres near you.',
-    status: 'Live now',
-    infoText: 'Daycares available near you',
+  parents: {
+    label: 'Featured Centres',
+    cardTitle: 'Popular childcare options',
+    cardDescription: 'Find trusted centres, compare programs, and book a tour with confidence.',
+    status: 'Open today',
+    infoText: 'Licensed childcare listings',
     icon: 'fi fi-rr-home',
-    itemAction: 'View daycare',
+    itemAction: 'View centre',
     bottomLabel: 'Looking for childcare?',
     bottomTitle: 'Find the right place for your family.',
-    exploreText: 'Explore',
-    heroTitle: 'Where families, educators & centres connect.',
+    exploreText: 'Search now',
+    heroTitle: 'One hub for childcare centres, educators, and families',
     heroDescription:
-      'Discover childcare, compare daycare centres, explore programs, and connect with trusted early childhood professionals — all in one place.',
-
-    filterTips: [
-      {
-        title: 'Search nearby daycares',
-        description: 'Find centres using your city or postal code.'
-      },
-      {
-        title: 'Compare childcare',
-        description: 'Explore programs, ages, availability and more.'
-      }
-    ],
+      'Search licensed centres, compare programs, and connect with childcare providers who meet your needs.',
 
     highlights: [
       {
@@ -301,35 +253,24 @@ const sections = {
         badge: 'Tours',
         location: '3.1 km away',
         icon: 'fi fi-rr-home'
-      },    
+      }
     ]
   },
 
-  centers: {
-    label: 'For childcare centres',
-    cardTitle: 'Grow your centre',
-    cardDescription: 'Connect with families and qualified educators.',
+  centres: {
+    label: 'Featured Services',
+    cardTitle: 'Build your centre presence',
+    cardDescription: 'Attract families and qualified educators with a strong childcare profile.',
     status: 'For centres',
-    infoText: 'Build your centre presence',
+    infoText: 'Trusted by childcare leaders',
     icon: 'fi fi-rr-building',
     itemAction: 'View profile',
     bottomLabel: 'Want more visibility?',
-    bottomTitle: 'Create your centre profile.',
+    bottomTitle: 'Create your centre profile and grow your reach.',
     exploreText: 'Get started',
     heroTitle: 'Give your childcare centre a profile people can trust.',
     heroDescription:
-      'Show families what makes your centre special, recruit educators, receive inquiries, and manage your childcare presence from one place.',
-
-    filterTips: [
-      {
-        title: 'Showcase your centre',
-        description: 'Add programs, photos, team information and videos.'
-      },
-      {
-        title: 'Recruit educators',
-        description: 'Post jobs and manage applications in one place.'
-      }
-    ],
+      'Show families what makes your centre special, recruit educators, receive inquiries, and manage your centre from one place.',
 
     highlights: [
       {
@@ -349,35 +290,24 @@ const sections = {
         badge: 'Recruit',
         location: 'Post opportunity',
         icon: 'fi fi-rr-briefcase'
-      },     
+      }
     ]
   },
 
-  jobs: {
-    label: 'Featured jobs',
-    cardTitle: 'Latest opportunities',
-    cardDescription: 'Discover your next early childhood opportunity.',
+  educators: {
+    label: 'Featured Roles',
+    cardTitle: 'Top opportunities for educators',
+    cardDescription: 'Discover meaningful roles in early childhood education that match your experience.',
     status: 'Hiring now',
-    infoText: 'New roles available today',
+    infoText: 'New positions available',
     icon: 'fi fi-rr-briefcase',
     itemAction: 'View job',
     bottomLabel: 'Ready for your next opportunity?',
-    bottomTitle: 'Build your educator profile.',
-    exploreText: 'Explore',
-    heroTitle: 'Find meaningful opportunities in early childhood education.',
+    bottomTitle: 'Build your educator profile and connect with hiring centres.',
+    exploreText: 'Browse roles',
+    heroTitle: 'Find meaningful opportunities in early childhood education',
     heroDescription:
-      'Discover childcare jobs, create a professional profile, find nearby opportunities, and connect with centres looking for educators.',
-
-    filterTips: [
-      {
-        title: 'Find nearby jobs',
-        description: 'Search by city, postal code and distance.'
-      },
-      {
-        title: 'Create your profile',
-        description: 'Showcase your experience beyond a traditional résumé.'
-      }
-    ],
+      'Discover roles that fit your schedule, values and experience, then connect directly with childcare centres.',
 
     highlights: [
       {
@@ -397,7 +327,7 @@ const sections = {
         badge: 'New',
         location: '5.4 km away',
         icon: 'fi fi-rr-briefcase'
-      },     
+      }
     ]
   }
 };
@@ -423,3 +353,79 @@ function handleExplore() {
   emit('explore', activeMenu.value);
 }
 </script>
+
+<style scoped>
+.hero-section {
+  position: relative;
+}
+
+.hero-section .hero-glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, rgba(78, 0, 119, 0.12), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(79, 130, 255, 0.1), transparent 28%);
+  pointer-events: none;
+  filter: blur(16px);
+  z-index: 0;
+}
+
+.hero-action-buttons {
+  z-index: 1;
+}
+
+.hero-action-buttons .btn {
+  min-width: 170px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.hero-action-buttons .btn:hover {
+  transform: translateY(-1px);
+}
+
+.hero-stats {
+  gap: 16px;
+  z-index: 1;
+}
+
+.stat-card {
+  min-width: 150px;
+  flex: 1 1 160px;
+  border: 1px solid rgba(78, 0, 119, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.side-badge {
+  min-inline-size: auto !important;
+}
+
+.tip-pill {
+  min-width: 240px;
+  flex: 1 1 240px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(78, 0, 119, 0.08);
+  background: rgba(255, 255, 255, 0.97);
+  z-index: 1;
+}
+
+.hero-tips .avatar-xs {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+@media (max-width: 991px) {
+  .hero-stats,
+  .hero-tips {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-action-buttons .btn {
+    width: 100%;
+  }
+}
+</style>
