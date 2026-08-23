@@ -1,11 +1,18 @@
 <template>
   <div class="page-layout">
     <AppHeader :logo="educatorLogo" :nav-items="navItems" />
+    
+      <!-- HERO ONLY -->
+      <section class="hero-background">
+        <div class="container-xxl">
+          <HeroSection
+            :filter-tips="dashboardFilter"
+            :highlights="featuredHighlights"
+          />
+        </div>
+      </section>
 
-    <main class="container-xxl py-3 py-lg-4">
-      <HeroSection :filter-tips="dashboardFilter" :highlights="featuredHighlights" />
-
-      <!-- Community / Daycare Section -->
+    <main class="container-xxl py-3 py-lg-4">      
       <section class="section" id="childcare">
         <child-care :day-cares="daycares" />
       </section>
@@ -49,6 +56,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useAuthStore } from '../stores/auth.store.js'
 
 import AppHeader from './LandingPageCompoent/AppHeader.vue'
 import HeroSection from './LandingPageCompoent/HeroSection.vue'
@@ -70,20 +79,79 @@ import {
   Building2,
   Layers,
   UserPlus,
-  LogIn
+  LogIn,
+  UserRound,
+  ClipboardList,
+  Search,
+  Settings,
+  Users,
+  MessageSquare,
+  ShieldCheck,
+  BarChart3,
+  FilePlus2,
+  BookOpen
 } from 'lucide-vue-next';
 import ChildCare from './LandingPageCompoent/ChildCare.vue'
 import CenterCard from './LandingPageCompoent/CenterCard.vue'
 
-const navItems = [
+const authStore = useAuthStore()
+
+const publicNavItems = [
   { label: 'Home', href: '#childcare', icon: Home },
-  { label: 'Browse Jobs', href: '#steps', icon: Briefcase },
+  { label: 'Browse Jobs', href: '#jobs', icon: Briefcase },
   { label: 'Educators', href: '#testimonials', icon: GraduationCap },
-  { label: 'Centers', href: '#centres', icon: Building2 },  
+  { label: 'Centers', href: '#centres', icon: Building2 },
   { label: 'dayCares', href: '#childcare', icon: Home },
   { label: 'Sign Up', href: '/register', icon: UserPlus },
-  { label: 'Login', href: '#register', icon: LogIn }
-];
+  { label: 'Login', href: '/login', icon: LogIn }
+]
+
+const roleNavItems = {
+  childcare: [
+    { label: 'Dashboard', href: '/dashboard', icon: Home },
+    { label: 'Centre Profile', href: '/childcare/profile', icon: Building2 },
+    { label: 'Post a Job', href: '/childcare/jobs/new', icon: FilePlus2 },
+    { label: 'Applicants', href: '/childcare/applications', icon: Users },
+    { label: 'Parent Inquiries', href: '/childcare/inquiries', icon: MessageSquare },
+    { label: 'Practicum', href: '/childcare/practicum', icon: GraduationCap },
+    { label: 'Account Settings', href: '/account/settings', icon: Settings }
+  ],
+  educator: [
+    { label: 'Dashboard', href: '/dashboard', icon: Home },
+    { label: 'Update Profile', href: '/educator/profile', icon: UserRound },
+    { label: 'Browse Jobs', href: '/jobs', icon: Search },
+    { label: 'Applications', href: '/educator/applications', icon: ClipboardList },
+    { label: 'Saved Jobs', href: '/educator/saved-jobs', icon: Briefcase },
+    { label: 'Practicum', href: '/educator/practicum', icon: GraduationCap },
+    { label: 'Account Settings', href: '/account/settings', icon: Settings }
+  ],
+  professional: [
+    { label: 'Dashboard', href: '/dashboard', icon: Home },
+    { label: 'Directory Profile', href: '/professional/profile', icon: UserRound },
+    { label: 'Claim a Profile', href: '/professionals/claim', icon: ShieldCheck },
+    { label: 'Find Professionals', href: '/professionals', icon: Search },
+    { label: 'Account Settings', href: '/account/settings', icon: Settings }
+  ],
+  admin: [
+    { label: 'Dashboard', href: '/dashboard', icon: Home },
+    { label: 'Users', href: '/admin/users', icon: Users },
+    { label: 'Centres', href: '/admin/centres', icon: Building2 },
+    { label: 'Educators', href: '/admin/educators', icon: GraduationCap },
+    { label: 'Jobs', href: '/admin/jobs', icon: Briefcase },
+    { label: 'Directory', href: '/admin/directory', icon: BookOpen },
+    { label: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
+    { label: 'Reports', href: '/admin/reports', icon: BarChart3 }
+  ]
+}
+
+const navItems = computed(() => {
+  if (!authStore.isAuthenticated) return publicNavItems
+
+  return [
+    ...(roleNavItems[authStore.role] || roleNavItems.educator),
+    { label: 'Log out', href: '#', icon: LogIn, action: 'logout' }
+  ]
+})
 
 const featuredHighlights = [
   { title: 'Preschool Manager', meta: 'Manager • Published 1 year ago', badge: 'Open' },

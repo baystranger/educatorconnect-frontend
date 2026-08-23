@@ -1,30 +1,6 @@
 <template>
     <section class="search-section">
         <div class="container">
-            <!-- =========================
-                 SEARCH TABS
-            ========================== -->
-            <div class="search-tabs-wrapper">
-                <div class="search-tabs">
-                    <button v-for="tab in tabs" :key="tab.id" type="button" class="search-tab"
-                        :class="{ active: activeTab === tab.id }" @click="setActiveTab(tab.id)">
-                        <span class="tab-icon">
-                            <component :is="tab.icon" :size="18" :stroke-width="2" />
-                        </span>
-
-                        <span class="tab-content">
-                            <span class="tab-title">
-                                {{ tab.title }}
-                            </span>
-
-                            <span class="tab-description">
-                                {{ tab.description }}
-                            </span>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
             <div class="search-panel">
                 <!-- =========================
                      CENTRES
@@ -393,14 +369,14 @@ watch(
 |--------------------------------------------------------------------------
 */
 
-const tabs = [   
+const tabs = [
     {
         id: "educators",
         title: "For Educators",
         description: "Find your next role",
         icon: UserRound,
     },
-     {
+    {
         id: "centres",
         title: "For Centres",
         description: "Post jobs & programs",
@@ -625,7 +601,7 @@ const handleParentSearch = () => {
 .search-tabs {
     display: flex;
     align-items: stretch;
-    justify-content: center;
+    justify-content: start;
     gap: 8px;
     width: 100%;
 }
@@ -1273,5 +1249,4 @@ const handleParentSearch = () => {
         transition: none;
     }
 }
-
 </style>

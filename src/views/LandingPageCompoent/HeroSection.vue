@@ -5,11 +5,11 @@
       <div class="hero-glow"></div>
 
       <div class="position-relative">
-        <span class="rounded-pill bg-primary-subtle text-primary fw-semibold">
+        <span class="badge rounded-pill bg-primary-subtle text-primary fw-semibold mt-3">
           Where Canada's early years come together
         </span>
 
-        <h1 class="display-4 fw-bold text-dark">
+        <h1 class="display-4 fw-bold mt-4 mb-3 text-dark">
           One hub for childcare centres, educators, and families
         </h1>
 
@@ -17,7 +17,22 @@
           Post your openings or your program, find a role that fits your life, or find the right daycare for your child — all in the same place.
         </p>
 
-        <SearchPanel
+        <!-- MENU BUTTONS -->
+        <div class="d-flex gap-3 flex-wrap">
+          <button
+            v-for="menu in menus"
+            :key="menu.key"
+            type="button"
+            class="btn"
+            :class="activeMenu === menu.key ? 'btn-primary' : 'btn-light'"
+            @click="changeSection(menu.key)"
+          >
+            {{ menu.label }}
+            <span v-if="menu.key === 'daycares'"></span>
+          </button>
+        </div>
+
+       <SearchPanel
           :active-section="activeMenu"
           @update:activeSection="changeSection"
         />
@@ -356,19 +371,18 @@ function handleExplore() {
 
 <style scoped>
 .hero-section {
-  position: relative;
+  position: relative;  
 }
 
 .hero-section .hero-glow {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at top left, rgba(78, 0, 119, 0.12), transparent 36%),
-    radial-gradient(circle at bottom right, rgba(79, 130, 255, 0.1), transparent 28%);
-  pointer-events: none;
-  filter: blur(16px);
+  height: 100%;          
+  border-radius: 2rem;  
+  filter: blur(50px);
   z-index: 0;
+  pointer-events: none;  
 }
 
 .hero-action-buttons {
