@@ -9,9 +9,10 @@ export default function CentresSection() {
           <span className="eyebrow">For families · for centres</span>
           <h2>Centres that show you <span>who they are.</span></h2>
         </div>
-        <p>Welcome videos, galleries, programs and real availability. Parents can ask questions, book tours or join waitlists — no account needed.</p>
+        <p>Book tours, ask questions or join waitlists — no account needed.</p>
       </div>
       <div className="centre-grid">
+        <div className="centre-card-track">
         {centres.map((centre) => (
           <article className="centre-card" key={centre.name}>
             <div className={`centre-art art-${centre.tone}`} style={{ backgroundColor: centre.cover }}>
@@ -25,16 +26,18 @@ export default function CentresSection() {
               <span className="centre-meta">{centre.ages} · {centre.distance}</span>
               <div className="centre-actions">
                 <a className="centre-action-primary" href="#care">Book a tour</a>
-                <a className="centre-action-secondary" href="#care">Ask a question</a>
+                <a className="centre-action-secondary" href="#care">Ask</a>
               </div>
             </div>
           </article>
         ))}
+        </div>
         <aside className="centre-promo">
           <span className="eyebrow">Run a centre?</span>
           <h3>Showcase your centre to families and educators.</h3>
+          <p className="centre-promo-mobile-copy">Programs, welcome video, gallery, tours and waitlist — in one profile.</p>
           <ul><li>Programs, ages &amp; hours</li><li>Welcome video &amp; gallery</li><li>Tours, waitlist &amp; inquiries</li></ul>
-          <a className="button button-light" href="#signup">Create centre profile</a>
+          <a className="button button-light" href="/signup?type=centre">Create centre profile</a>
         </aside>
       </div>
     </section>

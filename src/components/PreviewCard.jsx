@@ -1,3 +1,5 @@
+import Icon from './Icon.jsx';
+
 function PreviewCard({ variant, children }) {
   return (
     <article className={`preview-card ${variant}-preview`}>

@@ -38,13 +38,13 @@ export const audiences = [
     eyebrow: 'For parents',
     title: 'Find childcare you feel good about.',
     points: [
-      'Search by location, age group and program',
-      'Watch welcome videos and see real availability',
+      'Search by location, age and program',
+      'Watch welcome videos, see availability',
       'Book tours or join waitlists — no account',
     ],
     action: 'Search childcare',
-    href: '#care',
-    link: 'Parent guides',
+    href: '/childcare-search',
+    link: 'Guides',
     linkHref: '#footer',
     tone: 'lavender',
   },
@@ -54,11 +54,11 @@ export const audiences = [
     points: [
       'Jobs and practicums within your radius',
       'A profile with intro video and philosophy',
-      'Apply in minutes and track every status',
+      'Apply in minutes, track every status',
     ],
     action: 'Browse jobs',
     href: '#jobs',
-    link: 'Create profile',
+    link: 'Profile',
     linkHref: '#signup',
     tone: 'green',
   },
@@ -67,12 +67,12 @@ export const audiences = [
     title: 'Hire, showcase and grow.',
     points: [
       'Post jobs and manage applicants',
-      'A public profile families and educators trust',
+      'A public profile families trust',
       'Find reliable services in the directory',
     ],
     action: 'Post a job',
     href: '#signup',
-    link: 'Create centre profile',
+    link: 'Profile',
     linkHref: '#signup',
     tone: 'ink',
   },
@@ -307,22 +307,22 @@ export const professionals = [
 export const trustItems = [
   {
     title: 'Verified centres',
-    description: 'Reviewed by our team, with licensing shown only once validated.',
+    description: 'Licensing shown only once validated.',
     tone: 'green',
   },
   {
     title: 'Verified educators',
-    description: 'Certifications checked where applicable; record-check status is educator-controlled.',
+    description: 'Certifications checked where applicable.',
     tone: 'lavender',
   },
   {
-    title: 'Claimed professionals',
-    description: 'Ownership confirmed before anyone can edit a listing.',
+    title: 'Claimed pros',
+    description: 'Ownership confirmed before editing.',
     tone: 'gold',
   },
   {
     title: 'Privacy first',
-    description: 'Child information in inquiries is kept to what the centre needs.',
+    description: 'Only the child info centres need.',
     tone: 'blue',
   },
 ];
@@ -333,4 +333,11 @@ export const footerColumns = [
   { title: 'For centres', links: ['Create centre profile', 'Post a job', 'Find educators', 'Practicum opportunities'] },
   { title: 'Directory', links: ['Search professionals', 'Browse categories', 'Add your profile', 'Claim your profile'] },
   { title: 'Company', links: ['About', 'Resources', 'Help Centre', 'Contact'] },
+];
+
+export const mobileFooterColumns = [
+  { title: 'Find Childcare', links: ['Search centres', 'Parent resources'] },
+  { title: 'Jobs', links: ['Browse jobs', 'For ECE students'] },
+  { title: 'For Centres', links: ['Create profile', 'Post a job', 'Find educators'] },
+  { title: 'Directory', links: ['Search professionals', 'Add your profile', 'Claim your profile'] },
 ];

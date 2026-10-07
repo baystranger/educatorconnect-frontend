@@ -6,7 +6,7 @@ export default function AudienceSection() {
     <section className="section audience-section">
       <div className="audience-heading">
         <h2>One platform, <span>three ways</span> in.</h2>
-        <p>Each path is built for what you actually need to do — nothing more to learn.</p>
+        <p>Each path is built for what you actually need to do.</p>
       </div>
       <div className="audience-grid">
         {audiences.map((audience) => (
@@ -17,8 +17,14 @@ export default function AudienceSection() {
               {audience.points.map((point) => <li key={point}><Icon name="check" size={17} />{point}</li>)}
             </ul>
             <div className="audience-actions">
-              <a className="button" href={audience.href}>{audience.action}</a>
-              <a className="text-link" href={audience.linkHref}>{audience.link} <span aria-hidden="true">→</span></a>
+              <a
+                className="button"
+                href={audience.tone === 'green' ? '/signup?type=educator' : audience.tone === 'ink' ? '/signup?type=centre' : audience.href}
+              >{audience.action}</a>
+              <a
+                className="text-link"
+                href={audience.tone === 'green' ? '/signup?type=educator' : audience.tone === 'ink' ? '/signup?type=centre' : audience.linkHref}
+              >{audience.link} <span aria-hidden="true">→</span></a>
             </div>
           </article>
         ))}

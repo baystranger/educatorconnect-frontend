@@ -1,0 +1,688 @@
+.childcare-search-page {
+  min-height: 100vh;
+  background: #fcfbf8;
+  color: #17121f;
+  font-family: 'Figtree', sans-serif;
+}
+
+#root:has(.childcare-search-page) {
+  min-height: 100vh;
+}
+
+.childcare-search-page .site-header {
+  z-index: 40;
+  background: #fff;
+}
+
+.childcare-search-page .primary-nav a.active {
+  border-radius: 10px;
+  background: #f4effa;
+  color: #42007b;
+}
+
+.childcare-search-toolbar {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 14px;
+  border-bottom: 1px solid #ece7f0;
+  background: #fff;
+}
+
+.childcare-search-wrap,
+.childcare-search-layout {
+  width: min(1240px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.childcare-search-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.childcare-search-form {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  margin: 0;
+  padding: 6px 6px 6px 8px;
+  border: 1px solid #e6dfee;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 10px 26px #2e005714;
+}
+
+.childcare-search-field {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.childcare-location-field {
+  flex-grow: 1.3;
+}
+
+.childcare-search-field input,
+.childcare-search-field select {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #17121f;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.childcare-search-field select {
+  cursor: pointer;
+}
+
+.childcare-search-divider {
+  width: 1px;
+  height: 36px;
+  flex: 0 0 auto;
+  background: #ece7f0;
+}
+
+.childcare-search-submit {
+  height: 56px;
+  flex: 0 0 auto;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: #42007b;
+  color: #fff;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.childcare-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.childcare-radius-options {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f4f2f6;
+}
+
+.childcare-radius-options button {
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #3a3346;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.childcare-radius-options button.is-active {
+  background: #fff;
+  box-shadow: 0 1px 4px #00000014;
+  color: #42007b;
+}
+
+.childcare-filter-divider {
+  width: 1px;
+  height: 26px;
+  flex: 0 0 auto;
+  margin-inline: 6px;
+  background: #ece7f0;
+}
+
+.childcare-filter-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.childcare-filter-toggles button {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #e2daea;
+  border-radius: 999px;
+  background: #fff;
+  color: #3a3346;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.childcare-filter-toggles button.is-active {
+  border-color: #42007b;
+  background: #f4effa;
+  color: #42007b;
+}
+
+.childcare-search-main {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 40px;
+}
+
+.childcare-search-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 440px;
+  align-items: start;
+  gap: 22px;
+}
+
+.childcare-results {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.childcare-results-heading {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.childcare-results-heading h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.childcare-results-heading h1 strong {
+  font-weight: 700;
+}
+
+.childcare-results-heading h1 span,
+.childcare-sort {
+  color: #5c566a;
+}
+
+.childcare-results-heading h1 span {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.childcare-sort {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.childcare-sort select {
+  border: 0;
+  background: transparent;
+  color: #17121f;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.childcare-result-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 250px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1.5px solid #ece7f0;
+  border-radius: 20px;
+  background: #fff;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.childcare-result-card:hover,
+.childcare-result-card.is-selected {
+  border-color: #42007b;
+}
+
+.childcare-result-card:hover {
+  box-shadow: 0 12px 28px #2e005714;
+}
+
+.childcare-card-image {
+  position: relative;
+  display: block;
+  min-height: 200px;
+  overflow: hidden;
+  color: #17121f;
+}
+
+.childcare-image-orb,
+.childcare-image-sun {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.childcare-image-orb {
+  bottom: -70px;
+  left: -30px;
+  width: 200px;
+  height: 200px;
+}
+
+.childcare-image-sun {
+  top: 30px;
+  right: 26px;
+  width: 56px;
+  height: 56px;
+}
+
+.childcare-video-label,
+.childcare-photo-count,
+.childcare-image-number {
+  position: absolute;
+  z-index: 1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.childcare-video-label {
+  top: 10px;
+  left: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #17121f99;
+  color: #fff;
+}
+
+.childcare-photo-count {
+  right: 10px;
+  bottom: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.childcare-image-number {
+  bottom: 10px;
+  left: 10px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #42007b;
+  color: #fff;
+  font-size: 13px;
+}
+
+.childcare-card-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+}
+
+.childcare-card-heading,
+.childcare-card-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.childcare-card-title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.childcare-card-title h2 {
+  margin: 0;
+  color: #17121f;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+.childcare-card-title > span {
+  color: #5c566a;
+  font-size: 13.5px;
+}
+
+.childcare-availability {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.childcare-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.childcare-tag {
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: #f4effa;
+  color: #42007b;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.childcare-tag.is-verified {
+  background: #e8f3ea;
+  color: #016516;
+  font-weight: 700;
+}
+
+.childcare-description {
+  margin: 0;
+  color: #3a3346;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.childcare-card-footer {
+  align-items: center;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.childcare-hours {
+  color: #5c566a;
+  font-size: 13.5px;
+}
+
+.childcare-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.childcare-card-actions button {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.childcare-tour-button {
+  padding: 0 14px;
+  border: 1.5px solid #d9cce8;
+  background: #fff;
+  color: #17121f;
+}
+
+.childcare-view-button {
+  padding: 0 16px;
+  border: 0;
+  background: #42007b;
+  color: #fff;
+}
+
+.childcare-map {
+  position: sticky;
+  top: 20px;
+  height: 760px;
+  overflow: hidden;
+  border: 1px solid #ece7f0;
+  border-radius: 22px;
+  background: #f1ede6;
+}
+
+.childcare-map-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.childcare-map-pin {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border: 0;
+  border-radius: 50% 50% 50% 4px;
+  background: #42007b;
+  box-shadow: 0 4px 10px #0003;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.childcare-map-pin.is-selected {
+  width: 42px;
+  height: 42px;
+  background: #e6b300;
+}
+
+.childcare-map-pin span {
+  transform: rotate(45deg);
+}
+
+.childcare-map-label {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 16px #00000014;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.childcare-empty-state {
+  padding: 40px;
+  border: 1px dashed #ddd3e3;
+  border-radius: 18px;
+  background: #fff;
+  color: #5c566a;
+  font-size: 15px;
+  text-align: center;
+}
+
+.childcare-notice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #e3f2ef;
+  color: #155a52;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+  .childcare-search-layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 16px;
+  }
+
+  .childcare-result-card {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+
+  .childcare-card-content {
+    padding: 16px;
+  }
+
+  .childcare-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 860px) {
+  .childcare-search-toolbar {
+    padding: 18px 0 14px;
+  }
+
+  .childcare-search-wrap,
+  .childcare-search-layout {
+    width: calc(100% - 40px);
+  }
+
+  .childcare-search-form {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 8px;
+    border-radius: 22px;
+  }
+
+  .childcare-search-field {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+  }
+
+  .childcare-search-divider {
+    width: 100%;
+    height: 1px;
+  }
+
+  .childcare-search-submit {
+    width: 100%;
+    height: 52px;
+    margin-top: 6px;
+  }
+
+  .childcare-filter-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .childcare-radius-options {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .childcare-radius-options button {
+    flex: 0 0 auto;
+  }
+
+  .childcare-filter-divider {
+    display: none;
+  }
+
+  .childcare-filter-toggles {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .childcare-filter-toggles button {
+    min-width: 0;
+    padding-inline: 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .childcare-search-main {
+    padding-top: 18px;
+  }
+
+  .childcare-search-layout {
+    display: block;
+  }
+
+  .childcare-map {
+    display: none;
+  }
+
+  .childcare-results-heading {
+    flex-wrap: wrap;
+  }
+
+  .childcare-result-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .childcare-card-image {
+    min-height: 200px;
+  }
+
+  .childcare-card-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .childcare-card-actions {
+    width: 100%;
+  }
+
+  .childcare-card-actions button {
+    flex: 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .childcare-search-wrap,
+  .childcare-search-layout {
+    width: calc(100% - 30px);
+  }
+
+  .childcare-radius-options button {
+    padding-inline: 8px;
+  }
+
+  .childcare-results-heading h1 {
+    font-size: 16px;
+  }
+
+  .childcare-results-heading h1 span {
+    font-size: 14px;
+  }
+
+  .childcare-card-heading {
+    flex-direction: column;
+  }
+
+  .childcare-card-content {
+    padding: 14px;
+  }
+
+  .childcare-filter-toggles button {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .childcare-search-submit,
+  .childcare-filter-toggles button,
+  .childcare-card-actions button,
+  .childcare-map-pin {
+    transition: filter 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .childcare-search-submit:hover,
+  .childcare-card-actions button:hover {
+    filter: brightness(0.96);
+  }
+}
