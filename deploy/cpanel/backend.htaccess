@@ -1,0 +1,15 @@
+# Upload as public_html/educator-connect-backend/.htaccess
+# The Laravel code lives inside the web root, so nothing in this folder may be
+# served directly: .env, storage/logs, vendor/, composer.json, artisan…
+# Requests still reach Laravel through public_html/index.php.
+
+# Apache 2.4+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Apache 2.2 / older LiteSpeed
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

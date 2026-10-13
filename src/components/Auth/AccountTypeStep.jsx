@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const accountTypes = [
   {
     id: 'educator',
@@ -95,8 +97,10 @@ export default function AccountTypeStep({ selectedType, onSelect, onContinue }) 
         <span aria-hidden="true">→</span>
       </button>
       <div className="signup-secondary-links">
-        <span>Looking for childcare? <a href="/">Parents don’t need an account</a></span>
-        <span>Professional or service provider? <a href="/signup">Add or claim your directory listing</a></span>
+        <span>Looking for childcare? <Link to="/childcare">Parents don’t need an account</Link></span>
+        <span>Professional or service provider?{' '}
+          <button type="button" className="signup-inline-link" onClick={() => { onSelect('professional'); onContinue(); }}>Add or claim your directory listing</button>
+        </span>
       </div>
     </>
   );

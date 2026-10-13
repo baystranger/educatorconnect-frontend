@@ -26,9 +26,7 @@ const paths = {
   pin: (
     <>
       <path
-        data-dc-tpl="61"
-        d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"
-      ></path>
+        d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" />
     </>
   ),
   check: (
@@ -46,6 +44,11 @@ const paths = {
   menu: (
     <>
       <path d="M4 7h16M4 12h16M4 17h16" />
+    </>
+  ),
+  play: (
+    <>
+      <path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none" />
     </>
   ),
   sparkle: (

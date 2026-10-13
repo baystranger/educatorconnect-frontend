@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Icon from './Icon.jsx';
 
 function PreviewCard({ variant, children }) {
@@ -57,10 +58,10 @@ export default function PreviewCards() {
         <div className="mini-job-foot">
           <span>Posted 2 days ago</span>
 
-          <a href="#jobs">
+          <Link to="/jobs">
             Apply with profile
             <Icon name="arrow" size={14} />
-          </a>
+          </Link>
         </div>
       </PreviewCard>
 
