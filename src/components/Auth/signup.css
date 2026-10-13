@@ -408,6 +408,21 @@
   font-weight: 700;
 }
 
+.signup-inline-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #42007b;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signup-inline-link:hover {
+  text-decoration: underline;
+}
+
 .signup-content {
   display: flex;
   width: min(100%, 500px);
@@ -1580,4 +1595,166 @@
   .signup-confirmation > div > p {
     font-size: 12px;
   }
+}
+
+/* What-happens-next progress (sidebar) */
+.signup-next-step.is-current > span {
+  border-color: #fff;
+  background: #fff;
+  color: #17121f;
+}
+
+.signup-next-step.is-done > span {
+  border-color: #e6b300;
+  background: #e6b300;
+  color: #17121f;
+}
+
+/* Step 3 · Check your email */
+.signup-verify {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.signup-verify-icon {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  background: #f4effa;
+  color: #42007b;
+}
+
+.signup-verify-icon svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.signup-verify h1 {
+  margin: 0 0 10px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.9px;
+  line-height: 1.05;
+}
+
+.signup-verify p {
+  margin: 0;
+  color: #5c566a;
+  font-size: 16.5px;
+  line-height: 1.55;
+}
+
+.signup-verify p strong {
+  color: #17121f;
+}
+
+.signup-verify-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.signup-verify-actions a,
+.signup-verify-actions button {
+  display: flex;
+  height: 54px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.signup-verify-actions a {
+  border: 0;
+  background: #42007b;
+  color: #fff;
+}
+
+.signup-verify-actions a:hover {
+  filter: brightness(1.12);
+}
+
+.signup-verify-actions button {
+  border: 1.5px solid #d9cce8;
+  background: #fff;
+  color: #17121f;
+}
+
+.signup-verify-actions button:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.signup-verify-help {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid #ece7f0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.signup-verify-help > strong {
+  font-size: 15.5px;
+}
+
+.signup-verify-help > span {
+  color: #5c566a;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.signup-verify-help button.signup-inline-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #42007b;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.signup-verify-change {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.signup-verify-status {
+  color: #016516;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .signup-verify h1 {
+    font-size: 32px;
+  }
+
+  .signup-verify-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.signup-field-error {
+  color: #b42318;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.signup-field > input[aria-invalid="true"] {
+  border-color: #b42318;
 }

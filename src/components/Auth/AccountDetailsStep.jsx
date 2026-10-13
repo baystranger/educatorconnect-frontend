@@ -1,86 +1,76 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getSocialLoginUrl } from '../../services/authApi.js';
+import { REGIONS, passwordStrength } from '../../utils/validation.js';
 
-const locations = {
-  Canada: [
-    'British Columbia', 'Alberta', 'Saskatchewan', 'Manitoba', 'Ontario',
-    'Quebec', 'New Brunswick', 'Nova Scotia', 'Prince Edward Island',
-    'Newfoundland and Labrador', 'Yukon', 'Northwest Territories', 'Nunavut',
-  ],
-  'United States': [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
-    'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
-    'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine',
-    'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
-    'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-    'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
-    'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
-    'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia',
-    'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
-  ],
-};
-
-export default function AccountDetailsStep({
-  accountType,
-  onBack,
-  onComplete,
-  isSubmitting = false,
-  serverError = '',
-}) {
-  const [emailOpen, setEmailOpen] = useState(
-    () => window.matchMedia('(max-width: 760px)').matches,
+function GoogleMark() {
+  return (
+    <span className="signup-google-mark" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z" fill="#4285F4" />
+        <path d="M12 22c2.7 0 5-.9 6.6-2.5l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z" fill="#34A853" />
+        <path d="M6.4 13.9a6 6 0 0 1 0-3.8V7.5H3.1a10 10 0 0 0 0 9z" fill="#FBBC05" />
+        <path d="M12 6c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.5l3.3 2.6C7.2 7.8 9.4 6 12 6z" fill="#EA4335" />
+      </svg>
+    </span>
   );
+}
+
+/** Sign up · 2 · Your details (educator or centre). */
+export default function AccountDetailsStep({ accountType, onComplete, isSubmitting = false, serverError = null }) {
+  const isCentre = accountType === 'centre';
+  const isProfessional = accountType === 'professional';
+  const role = isCentre ? 'childcare_centre' : isProfessional ? 'professional' : 'educator';
+  const noun = isCentre ? 'centre' : isProfessional ? 'professional' : 'educator';
+  const [values, setValues] = useState({ country: 'Canada', province: 'British Columbia' });
   const [showPassword, setShowPassword] = useState(false);
   const [isStudent, setIsStudent] = useState(false);
-  const [providerNotice, setProviderNotice] = useState('');
-  const [country, setCountry] = useState('Canada');
-  const [region, setRegion] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [terms, setTerms] = useState(false);
+  const [localError, setLocalError] = useState('');
 
-  const role = accountType === 'centre' ? 'centre' : 'educator';
-  const noun = role === 'centre' ? 'centre' : 'educator';
-  const strength = Math.min(
-    4,
-    (password.length >= 10 ? 1 : 0)
-      + (password.length >= 14 ? 1 : 0)
-      + (/\d/.test(password) ? 1 : 0)
-      + (/[^A-Za-z0-9]/.test(password) ? 1 : 0),
-  );
-  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][strength];
+  const strength = passwordStrength(values.password || '');
+  const fieldError = (name) => serverError?.field?.(name);
+  const set = (name) => (event) => setValues((current) => ({ ...current, [name]: event.target.value }));
+
+  function beginSocialSignup(provider) {
+    window.location.assign(getSocialLoginUrl(provider, 'signup', role));
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (password !== passwordConfirmation) {
-      setProviderNotice('Passwords do not match.');
+    if (!terms) {
+      setLocalError('Please agree to the Terms & Conditions and Privacy Policy.');
       return;
     }
-    setProviderNotice('');
-    const fields = new FormData(event.currentTarget);
+    if (strength.score < 3) {
+      setLocalError('Use at least 10 characters, including a number and a symbol.');
+      return;
+    }
+    setLocalError('');
     await onComplete({
-      role: accountType === 'centre' ? 'childcare_centre' : 'educator',
-      first_name: fields.get('firstName') || undefined,
-      last_name: fields.get('lastName') || undefined,
-      centre_name: fields.get('centreName') || undefined,
-      contact_person: fields.get('contactPerson') || undefined,
-      phone: fields.get('phone') || undefined,
-      address: fields.get('streetAddress') || undefined,
-      email: fields.get('email'),
-      password: fields.get('password'),
-      password_confirmation: fields.get('password_confirmation'),
-      city: fields.get('city'),
-      province: fields.get('region'),
-      postal_code: fields.get('postalCode'),
-      country: fields.get('country'),
-      terms: fields.get('terms') === 'on',
-      is_student: isStudent,
+      role,
+      first_name: values.first_name,
+      last_name: values.last_name,
+      centre_name: values.centre_name,
+      contact_person: values.contact_person,
+      phone: values.phone,
+      address: values.address,
+      email: values.email,
+      password: values.password,
+      password_confirmation: values.password,
+      city: values.city,
+      province: values.province,
+      postal_code: values.postal_code,
+      country: values.country,
+      terms: true,
+      is_student: role === 'educator' && isStudent,
     });
   }
 
-  function beginSocialSignup(provider) {
-    const roleName = role === 'centre' ? 'childcare_centre' : 'educator';
-    window.location.assign(getSocialLoginUrl(provider, 'signup', roleName));
-  }
+  const input = (name, props = {}) => (
+    <input name={name} value={values[name] || ''} onChange={set(name)} aria-invalid={fieldError(name) ? 'true' : undefined} {...props} />
+  );
+  const errorFor = (name) => fieldError(name) && <small className="signup-field-error" role="alert">{fieldError(name)}</small>;
 
   return (
     <>
@@ -95,7 +85,7 @@ export default function AccountDetailsStep({
       </div>
       <div className="signup-provider-row">
         <button type="button" onClick={() => beginSocialSignup('google')}>
-          <span className="signup-google-mark" aria-hidden="true">G</span>
+          <GoogleMark />
           Sign up with Google
         </button>
         <button type="button" onClick={() => beginSocialSignup('linkedin')}>
@@ -103,157 +93,88 @@ export default function AccountDetailsStep({
           Sign up with LinkedIn
         </button>
       </div>
-      {providerNotice && <p className="signup-provider-notice" role="status">{providerNotice}</p>}
       <div className="signup-divider"><span>or</span></div>
-      {!emailOpen ? (
-        <button className="signup-email-toggle" type="button" onClick={() => setEmailOpen(true)}>
-          <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
-          Sign up with email &amp; password
-        </button>
-      ) : (
-        <form className="signup-form" onSubmit={handleSubmit}>
-          {providerNotice && <p className="signup-provider-notice" role="alert">{providerNotice}</p>}
-          {role === 'centre' ? (
-            <div className="signup-field-grid">
-              <label className="signup-field">
-                <span>Centre name</span>
-                <input name="centreName" autoComplete="organization" required />
-              </label>
-              <label className="signup-field">
-                <span>Contact person</span>
-                <input name="contactPerson" autoComplete="name" required />
-              </label>
-            </div>
-          ) : (
-            <div className="signup-field-grid">
-              <label className="signup-field">
-                <span>First name</span>
-                <input name="firstName" autoComplete="given-name" required />
-              </label>
-              <label className="signup-field">
-                <span>Last name</span>
-                <input name="lastName" autoComplete="family-name" required />
-              </label>
-            </div>
-          )}
-          <label className="signup-field">
-            <span>Email</span>
-            <input name="email" type="email" placeholder="you@example.com" autoComplete="email" required />
-          </label>
-          {role === 'centre' && (
-            <>
-              <label className="signup-field">
-                <span>Phone</span>
-                <input name="phone" type="tel" placeholder="(604) 555-0123" autoComplete="tel" required />
-              </label>
-              <label className="signup-field">
-                <span>Street address</span>
-                <input name="streetAddress" placeholder="Start typing your address" autoComplete="street-address" required />
-              </label>
-            </>
-          )}
+      <form className="signup-form" onSubmit={handleSubmit} noValidate={false}>
+        {isCentre ? (
           <div className="signup-field-grid">
-            <label className="signup-field">
-              <span>City</span>
-              <input name="city" autoComplete="address-level2" required />
-            </label>
-            <label className="signup-field">
-              <span>Postal code</span>
-              <input name="postalCode" placeholder={country === 'Canada' ? 'V5K 0A1' : '10001'} autoComplete="postal-code" required />
-            </label>
+            <label className="signup-field"><span>Centre name</span>{input('centre_name', { autoComplete: 'organization', required: true, maxLength: 255 })}{errorFor('centre_name')}</label>
+            <label className="signup-field"><span>Contact person</span>{input('contact_person', { autoComplete: 'name', required: true, maxLength: 255 })}{errorFor('contact_person')}</label>
           </div>
+        ) : (
           <div className="signup-field-grid">
-            <label className="signup-field">
-              <span>Country</span>
-              <select
-                name="country"
-                value={country}
-                autoComplete="country-name"
-                onChange={(event) => {
-                  setCountry(event.target.value);
-                  setRegion('');
-                }}
-              >
-                {Object.keys(locations).map((location) => <option key={location}>{location}</option>)}
-              </select>
-            </label>
-            <label className="signup-field">
-              <span>{country === 'Canada' ? 'Province / territory' : 'State'}</span>
-              <select
-                name="region"
-                value={region}
-                onChange={(event) => setRegion(event.target.value)}
-                autoComplete="address-level1"
-                required
-              >
-                <option value="" disabled>Select {country === 'Canada' ? 'province / territory' : 'state'}</option>
-                {locations[country].map((location) => <option key={location}>{location}</option>)}
-              </select>
-            </label>
+            <label className="signup-field"><span>First name</span>{input('first_name', { autoComplete: 'given-name', required: true, maxLength: 100 })}{errorFor('first_name')}</label>
+            <label className="signup-field"><span>Last name</span>{input('last_name', { autoComplete: 'family-name', required: true, maxLength: 100 })}{errorFor('last_name')}</label>
           </div>
+        )}
+        <label className="signup-field"><span>Email</span>{input('email', { type: 'email', placeholder: 'you@example.com', autoComplete: 'email', required: true })}{errorFor('email')}</label>
+        {isCentre && (
+          <>
+            <label className="signup-field"><span>Phone</span>{input('phone', { type: 'tel', placeholder: '(604) 555-0123', autoComplete: 'tel', required: true })}{errorFor('phone')}</label>
+            <label className="signup-field"><span>Street address</span>{input('address', { placeholder: 'Start typing your address', autoComplete: 'street-address', required: true })}{errorFor('address')}</label>
+          </>
+        )}
+        <div className="signup-field-grid">
+          <label className="signup-field"><span>City</span>{input('city', { autoComplete: 'address-level2', required: true })}{errorFor('city')}</label>
+          <label className="signup-field"><span>Postal code</span>{input('postal_code', { placeholder: values.country === 'Canada' ? 'V5K 0A1' : '10001', autoComplete: 'postal-code', required: true })}{errorFor('postal_code')}</label>
+        </div>
+        <div className="signup-field-grid">
           <label className="signup-field">
-            <span>Password</span>
-            <span className="signup-password-wrap">
-              <input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="new-password"
-                minLength={10}
-                pattern="(?=.*[0-9])(?=.*[^A-Za-z0-9]).{10,}"
-                title="Use at least 10 characters, including a number and a symbol."
-                required
-              />
-              <button type="button" onClick={() => setShowPassword((visible) => !visible)}>
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
-            </span>
-            <span className="signup-password-hint">
-              <span className="signup-strength-bars" aria-label={`Password strength: ${strengthLabel}`}>
-                {[1, 2, 3, 4].map((bar) => <i className={strength >= bar ? `strength-${strength}` : ''} key={bar} />)}
-              </span>
-              {strength ? `${strengthLabel} · ` : ''}10+ characters, a number &amp; a symbol
-            </span>
+            <span>Country</span>
+            <select name="country" value={values.country} autoComplete="country-name"
+              onChange={(event) => setValues((current) => ({ ...current, country: event.target.value, province: REGIONS[event.target.value][0] }))}>
+              {Object.keys(REGIONS).map((country) => <option key={country}>{country}</option>)}
+            </select>
           </label>
           <label className="signup-field">
-            <span>Confirm password</span>
-            <input
-              name="password_confirmation"
-              type={showPassword ? 'text' : 'password'}
-              value={passwordConfirmation}
-              onChange={(event) => setPasswordConfirmation(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
+            <span>{values.country === 'Canada' ? 'Province / territory' : 'State'}</span>
+            <select name="province" value={values.province} onChange={set('province')} autoComplete="address-level1" required>
+              {REGIONS[values.country].map((region) => <option key={region}>{region}</option>)}
+            </select>
+            {errorFor('province')}
           </label>
-          {role === 'educator' && (
-            <button
-              className={`signup-student-toggle${isStudent ? ' is-on' : ''}`}
-              type="button"
-              aria-pressed={isStudent}
-              onClick={() => setIsStudent((value) => !value)}
-            >
-              <span className="signup-switch" aria-hidden="true"><i /></span>
-              <span><strong>I’m an ECE student</strong><small>Adds practicum details to your profile.</small></span>
+        </div>
+        <label className="signup-field">
+          <span>Password</span>
+          <span className="signup-password-wrap">
+            {input('password', { type: showPassword ? 'text' : 'password', autoComplete: 'new-password', minLength: 10, required: true })}
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+              {showPassword ? 'Hide' : 'Show'}
             </button>
-          )}
-          <label className="signup-terms">
-            <input name="terms" type="checkbox" required />
-            <span className="signup-custom-checkbox" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </span>
+          <span className="signup-password-hint">
+            <span className="signup-strength-bars" aria-label={`Password strength: ${strength.label || 'none'}`}>
+              {[1, 2, 3, 4].map((bar) => <i className={strength.score >= bar ? `strength-${strength.score}` : ''} key={bar} />)}
             </span>
-            <span>I agree to the <a href="#terms">Terms &amp; Conditions</a> and <a href="#privacy">Privacy Policy</a>.</span>
-          </label>
-          {serverError && <p className="signup-provider-notice" role="alert">{serverError}</p>}
-          <button className="signup-primary-button" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account…' : `Create ${noun} account`}
+            {strength.score ? `${strength.label} · ` : ''}10+ characters, a number &amp; a symbol
+          </span>
+          {errorFor('password')}
+        </label>
+        {role === 'educator' && (
+          <button
+            className={`signup-student-toggle${isStudent ? ' is-on' : ''}`}
+            type="button"
+            role="switch"
+            aria-checked={isStudent}
+            onClick={() => setIsStudent((value) => !value)}
+          >
+            <span className="signup-switch" aria-hidden="true"><i /></span>
+            <span><strong>I’m an ECE student</strong><small>Adds practicum details to your profile.</small></span>
           </button>
-        </form>
-      )}
-      <p className="signup-legal-note">
-        By signing up, you agree to Educator Connect’s <a href="#terms">Terms &amp; Conditions</a> and <a href="#privacy">Privacy Policy</a>.
-      </p>
+        )}
+        <label className="signup-terms">
+          <input name="terms" type="checkbox" checked={terms} onChange={(event) => setTerms(event.target.checked)} />
+          <span className="signup-custom-checkbox" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </span>
+          <span>I agree to the <Link to="/#footer">Terms &amp; Conditions</Link> and <Link to="/#footer">Privacy Policy</Link>.</span>
+        </label>
+        {(localError || (serverError && !Object.keys(serverError.errors || {}).length) || serverError?.field?.('terms')) && (
+          <p className="signup-provider-notice" role="alert">{localError || serverError?.field?.('terms') || serverError.message}</p>
+        )}
+        <button className="signup-primary-button" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Creating account…' : `Create ${noun} account`}
+        </button>
+      </form>
     </>
   );
 }

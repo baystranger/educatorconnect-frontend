@@ -1,0 +1,18 @@
+/* Professional listings (dashboard + editor) */
+.pr-row { grid-template-columns: auto minmax(0, 1fr) auto; }
+.pr-row-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pr-row-copy strong { font-size: 16px; }
+.pr-row-copy small { color: var(--ec-muted); font-size: 14px; }
+.pr-notes { margin-top: 4px; padding: 8px 12px; border-radius: 10px; background: #fff4f2; color: #8a2d1f; font-size: 13.5px; }
+.pr-row-actions { justify-content: flex-end; }
+
+.pr-logo { display: flex; align-items: center; gap: 16px; }
+.pr-logo > span { flex-grow: 1; }
+.pr-switch-row { align-items: flex-start; gap: 14px; }
+.pr-switch-row > span { display: flex; flex-direction: column; gap: 2px; }
+
+@media (max-width: 760px) {
+  .pr-row { grid-template-columns: auto minmax(0, 1fr); }
+  .pr-row-actions, .pr-row > .ec-pill { grid-column: 1 / -1; justify-content: flex-start; justify-self: start; }
+  .pr-logo { flex-wrap: wrap; }
+}

@@ -1825,7 +1825,7 @@ h2,
 @media (max-width: 760px) {
   #root {
     display: flex;
-    min-height: 7800px;
+    min-height: 100dvh;
     flex-direction: column;
   }
 
@@ -3716,6 +3716,12 @@ h2,
   text-align: center;
 }
 
+button.professional-cta {
+  width: 100%;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .status-cta-claimed {
   border-color: #d9cce8;
   color: #42007b;
@@ -4927,11 +4933,6 @@ h2,
   }
 }
 
-@media (min-width: 761px) {
-  .mobile-preview-cards {
-    display: none;
-  }
-}
 
 .centre-card-track {
   display: contents;

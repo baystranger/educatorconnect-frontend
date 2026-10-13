@@ -11,19 +11,28 @@ const nextSteps = {
     'Build your centre profile',
     'Post a job & welcome families',
   ],
+  professional: [
+    'Create your account',
+    'Verify your email',
+    'Add or claim your directory listing',
+    'Get found by childcare centres',
+  ],
 };
 
 export default function SignupSidebar({ accountType, step }) {
   const isDetails = step !== 'account-type';
+  const completed = step === 'verification' ? 1 : 0;
   const type = accountType || 'educator';
   const steps = nextSteps[type];
+  // Professionals have no profile mock-up, so they keep the welcome previews.
+  const visual = isDetails && type !== 'professional' ? type : 'welcome';
 
   return (
-    <aside className={`signup-sidebar signup-sidebar-${isDetails ? type : 'welcome'}`}>
+    <aside className={`signup-sidebar signup-sidebar-${visual}`}>
       <div className="signup-side-orbit signup-side-orbit-one" />
       <div className="signup-side-orbit signup-side-orbit-two" />
       <span className="signup-free-pill"><i />Free for educators &amp; centres</span>
-      {!isDetails ? (
+      {visual === 'welcome' ? (
         <div className="signup-preview-stack" aria-label="Educator Connect account previews">
           <div className="signup-job-preview">
             <span className="signup-preview-avatar">LS</span>
@@ -73,8 +82,8 @@ export default function SignupSidebar({ accountType, step }) {
         <div className="signup-next-steps">
           <span className="signup-preview-eyebrow">WHAT HAPPENS NEXT</span>
           {steps.map((label, index) => (
-            <div className="signup-next-step" key={label}>
-              <span className="bg-white">{index + 1}</span><strong>{label}</strong>
+            <div className={`signup-next-step${index < completed ? ' is-done' : ''}${index === completed ? ' is-current' : ''}`} key={label}>
+              <span>{index < completed ? '✓' : index + 1}</span><strong>{label}</strong>
             </div>
           ))}
         </div>

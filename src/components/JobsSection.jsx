@@ -1,9 +1,29 @@
-import { jobFilters, jobs } from '../data.js';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { jobFilters } from '../data.js';
+import { useResource } from '../hooks/useResource.js';
+import { searchJobs } from '../services/publicApi.js';
+import { km, timeAgo } from '../utils/format.js';
 import Icon from './Icon.jsx';
 
-export default function JobsSection({ filter, onFilterChange }) {
-  const visibleJobs = jobs.filter((job) => filter === 'all' || job.typeKey === filter);
-  const displayedJobs = visibleJobs.slice(0, 4);
+const TAG_TONE = { practicum: 'gold', substitute: 'green', casual: 'green' };
+const AVATAR_TONE = ['purple', 'gold', 'green', 'purple'];
+
+function extraTag(job) {
+  if (job.employment_type?.key === 'practicum') return job.practicum_level?.label ? `${job.practicum_level.label} intake` : 'Placement';
+  if (job.number_of_positions > 1) return `${job.number_of_positions} positions`;
+  return job.pay || job.category?.label;
+}
+
+export default function JobsSection() {
+  const [filter, setFilter] = useState('all');
+  const type = jobFilters.find(([id]) => id === filter)?.[2];
+  const { data: jobs, meta, loading, error, reload } = useResource(
+    (signal) => searchJobs({ employment_types: type, per_page: 5, sort: 'newest' }, { signal }),
+    [type],
+  );
+
+  const total = meta?.total ?? 0;
 
   return (
     <section className="section jobs-section" id="jobs">
@@ -22,7 +42,7 @@ export default function JobsSection({ filter, onFilterChange }) {
                 type="button"
                 key={id}
                 aria-pressed={filter === id}
-                onClick={() => onFilterChange(id)}
+                onClick={() => setFilter(id)}
               >{label}</button>
             ))}
           </div>
@@ -31,22 +51,37 @@ export default function JobsSection({ filter, onFilterChange }) {
             <strong>Reach qualified educators near your centre.</strong>
             <p className="hiring-description-desktop">Post full-time, part-time, casual, substitute or practicum roles and review applicants from your dashboard.</p>
             <p className="hiring-description-mobile">Post any role type and review applicants from your dashboard.</p>
-            <a href="/signup?type=centre">Post a job <span aria-hidden="true">→</span></a>
+            <Link to="/signup?type=centre">Post a job <span aria-hidden="true">→</span></Link>
           </aside>
         </div>
-        <div className="job-list-panel">
+        <div className="job-list-panel" aria-busy={loading}>
           <div className="list-heading">
-            <span><strong>{displayedJobs.length} {displayedJobs.length === 1 ? 'role' : 'roles'}</strong> near Vancouver, BC · within 25 km</span>
-            <a href="#jobs">Browse all jobs <span aria-hidden="true">→</span></a>
+            <span><strong>{loading ? '…' : `${total} ${total === 1 ? 'role' : 'roles'}`}</strong> open now · newest first</span>
+            <Link to={type ? `/jobs?employment_types=${type}` : '/jobs'}>Browse all jobs <span aria-hidden="true">→</span></Link>
           </div>
-          {displayedJobs.length ? displayedJobs.map((job) => (
-            <a className="job-row" href="#jobs" key={`${job.title}-${job.centre}`}>
-              <span className={`avatar avatar-${job.tone}`}>{job.initials}</span>
-              <span className="job-main"><strong>{job.title}</strong><span>{job.centre} · <span className="job-city">{job.city} · </span>{job.distance}</span></span>
-              <span className="job-tags"><strong className={`job-tag tag-${job.tone}`}>{job.type}</strong><strong>{job.extra}</strong></span>
-              <span className="job-posted">{job.posted}<Icon name="arrow" size={16} /></span>
-            </a>
-          )) : <p className="empty-state">No roles of this type nearby yet — try a wider radius.</p>}
+          {error && (
+            <p className="empty-state">
+              Jobs couldn’t load right now. <button type="button" className="ec-link-btn" onClick={() => reload()}>Try again</button>
+            </p>
+          )}
+          {!error && loading && Array.from({ length: 4 }, (_, index) => (
+            <div className="job-row" key={index} aria-hidden="true"><span className="ec-skeleton" style={{ height: 44, gridColumn: '1 / -1' }} /></div>
+          ))}
+          {!error && !loading && jobs?.length === 0 && <p className="empty-state">No roles of this type yet — check back soon or browse all jobs.</p>}
+          {!error && !loading && jobs?.map((job, index) => {
+            const tone = TAG_TONE[job.employment_type?.key] || 'purple';
+            return (
+              <Link className="job-row" to={`/jobs/${job.slug}`} key={job.id}>
+                <span className={`avatar avatar-${AVATAR_TONE[index % AVATAR_TONE.length]}`}>{job.centre?.initials}</span>
+                <span className="job-main">
+                  <strong>{job.title}</strong>
+                  <span>{job.centre?.name} · <span className="job-city">{job.city}</span>{job.distance_km !== null && ` · ${km(job.distance_km)}`}</span>
+                </span>
+                <span className="job-tags"><strong className={`job-tag tag-${tone}`}>{job.employment_type?.label}</strong>{extraTag(job) && <strong>{extraTag(job)}</strong>}</span>
+                <span className="job-posted">{timeAgo(job.published_at)}<Icon name="arrow" size={16} /></span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>

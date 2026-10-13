@@ -415,7 +415,8 @@
   gap: 8px;
 }
 
-.childcare-card-actions button {
+.childcare-card-actions button,
+.childcare-card-actions a {
   display: flex;
   height: 40px;
   align-items: center;
@@ -685,4 +686,20 @@
   .childcare-card-actions button:hover {
     filter: brightness(0.96);
   }
+}
+
+.childcare-card-title h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.childcare-card-title h2 a:hover {
+  color: #42007b;
+}
+
+button.childcare-map-label {
+  border: 0;
+  font-family: inherit;
+  color: #17121f;
+  cursor: pointer;
 }
