@@ -233,13 +233,18 @@ export default function PostJobPage() {
                 <div key={label} className={`pj-check ${done ? '' : 'is-todo'}`}><i>{done && <Icon name="check" size={10} strokeWidth={3.6} />}</i>{label}</div>
               ))}
               <div className="ec-stack-sm" style={{ gap: 8, marginTop: 8 }}>
-                <Button block onClick={() => submit(true)} loading={saving === 'publish'} disabled={!ready || saving === 'draft'} style={{ height: 50 }}>
+                {/* The API refuses to publish until the email is verified; edits to a live job are fine. */}
+                <Button block onClick={() => submit(true)} loading={saving === 'publish'} disabled={!ready || saving === 'draft' || (!isLive && !user?.email_verified)} style={{ height: 50 }}>
                   {isLive ? 'Save changes' : 'Publish job'}
                 </Button>
                 {!isLive && <Button block variant="outline" onClick={() => submit(false)} loading={saving === 'draft'} disabled={!form.title.trim() || saving === 'publish'}>Save as draft</Button>}
               </div>
               {!ready && <span className="ec-muted" style={{ fontSize: 13 }}>Complete the checklist to publish.</span>}
-              {!user?.email_verified && <div className="ec-alert ec-alert-warning" style={{ fontSize: 13.5 }}>Verify your email before publishing. You can still save drafts.</div>}
+              {!user?.email_verified && !isLive && (
+                <div className="ec-alert ec-alert-warning" style={{ fontSize: 13.5 }}>
+                  Verify your email before publishing — we sent a link to <strong>{user?.email}</strong>. You can still save drafts. <Link to="/settings">Resend or change it</Link>
+                </div>
+              )}
             </section>
           </aside>
         </div>

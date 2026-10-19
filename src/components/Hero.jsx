@@ -130,7 +130,7 @@ export default function Hero() {
         </div>
 
         <div className="hero-previews mobile-preview-cards" aria-label="Featured listings">
-          {/* <PreviewCards /> */}
+          <PreviewCards />
         </div>
       </div>
     </section>

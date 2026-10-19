@@ -33,6 +33,20 @@ export function AuthProvider({ children }) {
     });
   }, [refresh]);
 
+  // The verification link is usually opened in another tab. When an unverified user comes
+  // back, re-check so publish actions unlock without a manual reload.
+  const awaitingVerification = Boolean(user) && !user.email_verified;
+  useEffect(() => {
+    if (!awaitingVerification) return undefined;
+    const recheck = () => { if (document.visibilityState === 'visible') refresh(); };
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', recheck);
+    return () => {
+      window.removeEventListener('focus', recheck);
+      document.removeEventListener('visibilitychange', recheck);
+    };
+  }, [awaitingVerification, refresh]);
+
   const signIn = useCallback((nextUser) => {
     setUser(nextUser);
     setStatus('authenticated');

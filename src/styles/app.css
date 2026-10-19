@@ -40,7 +40,7 @@
   display: flex;
   flex-direction: column;
 }
-
+.get-started {color: #fff !important}
 .ec-app a { color: var(--ec-purple); }
 .ec-app a:hover { text-decoration: underline; }
 .ec-app a.ec-btn:hover, .ec-app a.ec-card-link:hover, .ec-app a.ec-row:hover { text-decoration: none; }
