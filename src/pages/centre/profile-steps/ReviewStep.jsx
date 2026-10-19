@@ -67,7 +67,7 @@ export default function ReviewStep({ centre, onSaved, onEdit, registerSave, setD
         {!user?.email_verified && <div className="ec-alert ec-alert-warning">Verify your email address before publishing.</div>}
         <div className="ec-actions" style={{ justifyContent: 'flex-end' }}>
           <Button variant="outline" to={`/childcare/${centre.slug}`} disabled={!live}>{live ? 'Preview as a parent' : 'Preview available after publishing'}</Button>
-          <Button onClick={submit} loading={submitting} disabled={!confirmed || !steps.basics.complete}>{live ? 'Confirm & update' : 'Submit for review'}</Button>
+          <Button onClick={submit} loading={submitting} disabled={!confirmed || !steps.basics.complete || !user?.email_verified}>{live ? 'Confirm & update' : 'Submit for review'}</Button>
         </div>
       </section>
     </>

@@ -32,6 +32,18 @@ export function getSocialLoginUrl(provider, intent, role) {
   return url.toString();
 }
 
+/** Name/email the provider shared for a Google/LinkedIn sign-up still in progress. */
+export async function getPendingSocialSignup(token) {
+  const payload = await api.post('/auth/oauth/pending', { token });
+  return payload.data;
+}
+
+/** Finishes a Google/LinkedIn sign-up with the details the provider doesn't share. */
+export async function registerSocialAccount(data) {
+  const payload = await api.post('/auth/register/social', { ...data, device_name: DEVICE_NAME });
+  return payload.data;
+}
+
 export async function exchangeOAuthCode(code) {
   const payload = await api.post('/auth/oauth/exchange', { code, device_name: DEVICE_NAME });
   return payload.data;

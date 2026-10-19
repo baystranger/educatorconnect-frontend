@@ -9,9 +9,9 @@
 
 // VITE_API_BASE_URL may be absolute (separate API host) or relative such as
 // '/api/v1' when the SPA and Laravel are served from the same public_html.
-// Production builds default to the same origin as the page.
-const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL
-  || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1');
+// Both production and development default to the page's own origin: in development
+// the Vite server proxies /api, /sanctum and /oauth to Laravel (see vite.config.js).
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
 export const apiBaseUrl = new URL(configuredBaseUrl, window.location.origin).toString().replace(/\/+$/, '');
 export const apiRootUrl = apiBaseUrl.replace(/\/api\/v\d+$/, '');

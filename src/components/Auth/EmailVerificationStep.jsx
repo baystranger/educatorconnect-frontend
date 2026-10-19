@@ -6,10 +6,10 @@ import { resendVerificationEmail } from '../../services/authApi.js';
 const POLL_MS = 5000;
 
 /**
- * Step 3 · Check your email. Polls the signed-in account until the link in the
+ * Sign up · 3 · Check your email. Polls the signed-in account until the link in the
  * email has been clicked (possibly on another device), then continues.
  */
-export default function EmailVerificationStep({ email, accountType, onVerified }) {
+export default function EmailVerificationStep({ email, accountType, hasPassword = true, onVerified }) {
   const { refresh, setUser } = useAuth();
   const [resendState, setResendState] = useState('idle'); // idle | sending | sent
   const [error, setError] = useState('');
@@ -59,51 +59,51 @@ export default function EmailVerificationStep({ email, accountType, onVerified }
   }
 
   return (
-    <div className="signup-verify">
-      <div className="signup-step-indicator">
-        <span className="signup-step-line active" />
-        <span className="signup-step-line active" />
-        <span>ALMOST DONE</span>
-      </div>
+    <div className="signup-stack signup-gap-22">
       <span className="signup-verify-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" />
+        </svg>
       </span>
-      <div>
-        <h1>Check your email</h1>
-        <p>
+      <div className="signup-intro">
+        <h1 className="signup-h2">Check your email</h1>
+        <p className="signup-verify-copy">
           We sent a verification link to <strong>{currentEmail}</strong>. Click it to activate your {noun} account — it expires in 24 hours.
         </p>
       </div>
-      <div className="signup-verify-actions">
-        <a href="mailto:">Open email app</a>
-        <button type="button" onClick={resend} disabled={resendState !== 'idle'}>
+      <div className="signup-grid-2 signup-verify-actions">
+        <a href="mailto:" className="signup-btn signup-verify-open">Open email app</a>
+        <button type="button" className="signup-outline" onClick={resend} disabled={resendState !== 'idle'}>
           {resendState === 'sending' ? 'Sending…' : resendState === 'sent' ? 'Sent again ✓' : 'Resend email'}
         </button>
       </div>
-      {error && <p className="signup-provider-notice" role="alert">{error}</p>}
-      <div className="signup-verify-help">
+      {error && <span className="signup-error-text" role="alert">{error}</span>}
+      <div className="signup-help">
         <strong>Didn’t get it?</strong>
         <span>
           Check your spam folder, or{' '}
-          <button type="button" className="signup-inline-link" onClick={() => setChanging((open) => !open)}>
+          <button type="button" className="signup-link-btn" onClick={() => setChanging((open) => !open)}>
             go back and fix your email address
           </button>.
         </span>
         {changing && (
-          <form className="signup-verify-change" onSubmit={submitNewEmail}>
+          <form className="signup-stack signup-gap-14 signup-help-form" onSubmit={submitNewEmail}>
             <label className="signup-field">
-              <span>Email</span>
+              Email
               <input type="email" value={newEmail} onChange={(event) => setNewEmail(event.target.value)} autoComplete="email" required />
             </label>
-            <label className="signup-field">
-              <span>Password</span>
-              <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
-            </label>
-            <button className="signup-primary-button" type="submit">Update email &amp; resend</button>
+            {/* Google/LinkedIn accounts have no password; the API doesn't ask them for one. */}
+            {hasPassword && (
+              <label className="signup-field">
+                Password
+                <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
+              </label>
+            )}
+            <button className="signup-btn signup-submit" type="submit">Update email &amp; resend</button>
           </form>
         )}
       </div>
-      <span className="signup-verify-status" aria-live="polite">This page continues automatically once your email is verified.</span>
+      <span className="signup-sr-only" aria-live="polite">This page continues automatically once your email is verified.</span>
     </div>
   );
 }

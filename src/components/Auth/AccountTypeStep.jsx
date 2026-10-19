@@ -1,107 +1,96 @@
 import { Link } from 'react-router-dom';
 
-const accountTypes = [
+const ACCOUNT_TYPES = [
   {
     id: 'educator',
-    title: 'Educator / ECE student',
-    description: 'Find jobs and practicum placements near you.',
-    benefits: [
-      'Profile with intro video & teaching philosophy',
-      'Search jobs by distance and apply in minutes',
-      'Track applications · student practicum mode',
-    ],
-    icon: 'cap',
+    label: 'Educator / ECE student',
+    sub: 'Find jobs and practicum placements near you.',
+    features: ['Profile with intro video & teaching philosophy', 'Search jobs by distance and apply in minutes', 'Track applications · student practicum mode'],
   },
   {
     id: 'centre',
-    title: 'Childcare centre',
-    description: 'Hire educators and showcase your centre to families.',
-    benefits: [
-      'Public profile with welcome video & gallery',
-      'Post jobs and practicums, review applicants',
-      'Manage parent inquiries, tours & waitlists',
-    ],
-    icon: 'building',
+    label: 'Childcare centre',
+    sub: 'Hire educators and showcase your centre to families.',
+    features: ['Public profile with welcome video & gallery', 'Post jobs and practicums, review applicants', 'Manage parent inquiries, tours & waitlists'],
   },
 ];
 
-function AccountIcon({ name }) {
-  return name === 'cap' ? (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="m2.5 9 9.5-5 9.5 5-9.5 5-9.5-5Z" />
-      <path d="M6.5 11.2v5.2c3.5 2.7 7.5 2.7 11 0v-5.2M21.5 9v6" />
+function TypeIcon({ id }) {
+  return id === 'educator' ? (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 9l10-5 10 5-10 5z" /><path d="M6 11v5c3 2.5 9 2.5 12 0v-5" />
     </svg>
   ) : (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <rect x="5" y="3" width="14" height="18" rx="2" />
-      <path d="M9 7h6M9 11h2m4 0h.01M9 15h2m4 0h.01M10 21v-3h4v3" />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="3" width="16" height="18" rx="1.5" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4" />
     </svg>
   );
 }
 
-function CheckIcon() {
+export function Check({ size = 16, width = 2.6, color = 'currentColor' }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
   );
 }
 
-export default function AccountTypeStep({ selectedType, onSelect, onContinue }) {
+export function Arrow() {
   return (
-    <>
-      <div className="signup-step-indicator">
-        <span className="signup-step-line active" />
-        <span className="signup-step-line" />
-        <span>STEP 1 OF 2 · ACCOUNT TYPE</span>
-      </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/** Sign up · 1 · Account type. */
+export default function AccountTypeStep({ selectedType, showError, onSelect, onContinue, onProfessional }) {
+  const continueLabel = selectedType === 'educator' ? 'Continue as educator' : selectedType === 'centre' ? 'Continue as centre' : 'Continue';
+
+  return (
+    <div className="signup-stack signup-gap-22">
       <div className="signup-intro">
-        <h1>Welcome to Educator Connect</h1>
+        <h1 className="signup-h1">Welcome to Educator Connect</h1>
         <p>Tell us who you are and we’ll set up the right account for you.</p>
       </div>
-      <fieldset className="signup-account-options" role="radiogroup" aria-label="I’m joining as">
-        <legend>I’m joining as… <span aria-hidden="true">*</span></legend>
-        {accountTypes.map((type) => {
-          const selected = selectedType === type.id;
+
+      <div className="signup-types" role="radiogroup" aria-labelledby="acct-label" aria-required="true">
+        <span id="acct-label" className="signup-types-label">I’m joining as… <span className="signup-required">*</span></span>
+        {ACCOUNT_TYPES.map((type) => {
+          const on = selectedType === type.id;
           return (
             <button
-              className={`signup-account-card${selected ? ' is-selected' : ''}`}
+              key={type.id}
               type="button"
               role="radio"
-              aria-checked={selected}
-              key={type.id}
+              aria-checked={on}
+              className={`signup-type${on ? ' is-on' : ''}${showError ? ' is-error' : ''}`}
               onClick={() => onSelect(type.id)}
             >
-              <span className="signup-account-icon"><AccountIcon name={type.icon} /></span>
-              <span className="signup-account-copy">
-                <strong>{type.title}</strong>
-                <span className="signup-account-description">{type.description}</span>
-                <span className="signup-benefits">
-                  {type.benefits.map((benefit) => (
-                    <span key={benefit}><CheckIcon />{benefit}</span>
-                  ))}
+              <span className="signup-type-icon"><TypeIcon id={type.id} /></span>
+              <span className="signup-type-copy">
+                <strong>{type.label}</strong>
+                <span className="signup-type-sub">{type.sub}</span>
+                <span className="signup-type-features">
+                  {type.features.map((feature) => <span key={feature}><Check color={on ? '#42007B' : '#8A8496'} />{feature}</span>)}
                 </span>
               </span>
-              <span className="signup-radio-mark" aria-hidden="true" />
+              <span className="signup-type-radio"><Check size={14} width={3.2} color="#FFFFFF" /></span>
             </button>
           );
         })}
-      </fieldset>
-      <button
-        className="signup-primary-button"
-        type="button"
-        disabled={!selectedType}
-        onClick={onContinue}
-      >
-        {selectedType === 'centre' ? 'Continue as centre' : selectedType === 'educator' ? 'Continue as educator' : 'Continue'}
-        <span aria-hidden="true">→</span>
-      </button>
-      <div className="signup-secondary-links">
-        <span>Looking for childcare? <Link to="/childcare">Parents don’t need an account</Link></span>
-        <span>Professional or service provider?{' '}
-          <button type="button" className="signup-inline-link" onClick={() => { onSelect('professional'); onContinue(); }}>Add or claim your directory listing</button>
-        </span>
       </div>
-    </>
+
+      {showError && <span className="signup-error-text signup-pull-up" role="alert">Please choose an account type to continue.</span>}
+
+      <button type="button" className={`signup-btn signup-continue${selectedType ? '' : ' is-idle'}`} aria-disabled={!selectedType} onClick={onContinue}>
+        {continueLabel}<Arrow />
+      </button>
+
+      <div className="signup-alt-links">
+        <span>Looking for childcare? <Link to="/childcare">Parents don’t need an account</Link></span>
+        <span>Professional or service provider? <button type="button" className="signup-link-btn" onClick={onProfessional}>Add or claim your directory listing</button></span>
+      </div>
+    </div>
   );
 }

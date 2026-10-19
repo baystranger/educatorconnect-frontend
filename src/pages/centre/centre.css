@@ -98,13 +98,16 @@
 
 /* Applicants */
 .ap-title { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* "Applicants for [posting ▾]" sits on one line (the generic page-head rule stacks its first block). */
+.ec-page-head > div.ap-title:first-child { flex-direction: row; align-items: center; }
 .ap-title .ec-select { width: auto; min-width: 260px; height: 44px; font-weight: 700; }
 .ap-stages { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; }
 .ap-stage { padding: 12px 14px; border-radius: 14px; border: 1px solid var(--ec-line); background: #fff; display: flex; flex-direction: column; gap: 2px; text-align: left; cursor: pointer; color: var(--ec-ink); }
 .ap-stage span:first-child { font-size: 13.5px; font-weight: 600; }
 .ap-stage span:last-child { font-family: var(--ec-heading); font-size: 22px; font-weight: 700; }
 .ap-stage[aria-pressed='true'] { background: var(--ec-purple); border-color: var(--ec-purple); color: #fff; }
-.ap-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr) 400px; gap: 16px; align-items: stretch; min-height: 560px; }
+/* Panels fill the screen below the header, as in the design; never shorter than before. */
+.ap-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr) 400px; gap: 16px; align-items: stretch; min-height: max(560px, calc(100vh - 300px)); }
 .ap-list { background: #fff; border: 1px solid var(--ec-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
 .ap-person { display: flex; gap: 12px; align-items: center; padding: 16px 18px; border: 0; border-bottom: 1px solid var(--ec-line-soft); border-left: 3px solid transparent; background: #fff; text-align: left; cursor: pointer; color: var(--ec-ink); width: 100%; }
 .ap-person[aria-current='true'] { background: var(--ec-purple-tint); border-left-color: var(--ec-purple); }
@@ -145,7 +148,7 @@
 .ap-compose-row .ec-textarea { flex-grow: 1; min-height: 60px; }
 
 /* Families */
-.fm-layout { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; align-items: stretch; min-height: 620px; }
+.fm-layout { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 16px; align-items: stretch; min-height: max(620px, calc(100vh - 290px)); }
 .fm-list { background: #fff; border: 1px solid var(--ec-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
 .fm-item { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border: 0; border-bottom: 1px solid var(--ec-line-soft); border-left: 3px solid transparent; background: #fff; text-align: left; cursor: pointer; color: var(--ec-ink); width: 100%; }
 .fm-item[aria-current='true'] { background: var(--ec-purple-tint); border-left-color: var(--ec-purple); }

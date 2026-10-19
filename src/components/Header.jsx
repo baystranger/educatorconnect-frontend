@@ -31,7 +31,7 @@ export default function Header() {
   ) : (
     <>
       <Link className="sign-in" to="/signin" onClick={close}>Sign in</Link>
-      <Link className="button button-small" to="/signup" onClick={close}>Get started</Link>
+      <Link className="button button-small get-started" to="/signup" onClick={close}>Get started</Link>
     </>
   );
 
