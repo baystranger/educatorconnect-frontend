@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Avatar, Button, EmptyState, ErrorState, FilterPills, Icon, Modal, Pill, Skeleton, StepBars, Tabs } from '../../components/ui/index.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getMyApplications, getSavedJobs, replyToCentre, unsaveJob, withdrawApplication } from '../../services/educatorApi.js';
@@ -38,6 +39,10 @@ function ApplicationRow({ application, open, onToggle, onWithdraw }) {
   const toast = useToast();
   const [reply, setReply] = useState('');
   const [messages, setMessages] = useState(application.messages || []);
+  useUnsavedChanges(Boolean(reply.trim()), {
+    message: 'You have an unsent reply to a centre. Leaving will discard it.',
+    onDiscard: () => setReply(''),
+  });
   const [sending, setSending] = useState(false);
   const lastCentreMessage = [...messages].reverse().find((message) => message.sender_role === 'centre');
 
@@ -115,6 +120,7 @@ function SavedJobs({ onCount }) {
     onCount((count) => Math.max(0, count - 1));
     try {
       await unsaveJob(job.id);
+      toast.success('Removed from saved jobs.');
     } catch (requestError) {
       toast.error(requestError);
       reload({ silent: true });

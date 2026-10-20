@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { videoSizeError } from '../../constants/uploads.js';
 import { Button, Modal } from './index.jsx';
 
 const MAX_SECONDS = 90;
@@ -62,7 +63,8 @@ export default function VideoRecorder({ open, onClose, onRecorded, title = 'Reco
   function start() {
     const mime = pickMimeType();
     chunksRef.current = [];
-    const recorder = new MediaRecorder(streamRef.current, mime ? { mimeType: mime } : undefined);
+    // ~1.6 Mbps keeps a full 90-second recording well under the 25 MB upload limit.
+    const recorder = new MediaRecorder(streamRef.current, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: 1_500_000, audioBitsPerSecond: 96_000 });
     recorder.ondataavailable = (event) => { if (event.data.size) chunksRef.current.push(event.data); };
     recorder.onstop = () => {
       const type = recorder.mimeType.split(';')[0] || 'video/webm';
@@ -93,7 +95,7 @@ export default function VideoRecorder({ open, onClose, onRecorded, title = 'Reco
       footer={state === 'recorded' ? (
         <>
           <Button variant="outline" onClick={retake}>Retake</Button>
-          <Button onClick={() => { onRecorded(file); onClose(); }}>Use this video</Button>
+          <Button onClick={() => { onRecorded(file); onClose(); }} disabled={Boolean(videoSizeError(file))}>Use this video</Button>
         </>
       ) : null}
     >
@@ -101,6 +103,7 @@ export default function VideoRecorder({ open, onClose, onRecorded, title = 'Reco
         <div className="ec-alert ec-alert-error">{error}</div>
       ) : (
         <div className="ec-recorder">
+          {state === 'recorded' && videoSizeError(file) && <div className="ec-alert ec-alert-error">{videoSizeError(file)}</div>}
           {state === 'recorded'
             ? <video src={preview} controls playsInline />
             : <video ref={liveRef} autoPlay muted playsInline />}

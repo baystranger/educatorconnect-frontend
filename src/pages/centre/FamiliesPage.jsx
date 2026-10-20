@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Avatar, Button, EmptyState, ErrorState, Pill, Skeleton, Tabs, Textarea } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getFamilies, getFamilyRequest, replyToFamily, setFamilyRequestStatus } from '../../services/centreApi.js';
@@ -30,6 +31,10 @@ function RequestDetail({ id, centreName, onUpdated }) {
   const threadRef = useRef(null);
 
   useEffect(() => { setReply(''); }, [id]);
+  useUnsavedChanges(Boolean(reply.trim()), {
+    message: 'You have an unsent reply to this family. Leaving will discard it.',
+    onDiscard: () => setReply(''),
+  });
   useEffect(() => { threadRef.current?.scrollTo(0, threadRef.current.scrollHeight); }, [request?.messages?.length]);
 
   if (loading && !request) return <section className="fm-detail"><div className="fm-detail-head"><Skeleton height={50} /><Skeleton height={60} /></div></section>;

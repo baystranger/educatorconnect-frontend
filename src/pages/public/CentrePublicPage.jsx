@@ -3,6 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import Footer from '../../components/Footer.jsx';
 import Header from '../../components/Header.jsx';
 import { ErrorState, Icon, PageLoader } from '../../components/ui/index.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getCentre, sendParentRequest } from '../../services/publicApi.js';
@@ -72,7 +74,14 @@ function ContactPanel({ centre, initialTab }) {
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(null);
+  const toast = useToast();
   const availability = centre.availability_detail;
+  const typed = ['parent_name', 'email', 'phone', 'message'].some((key) => form[key].trim());
+  const [sentSnapshot, setSentSnapshot] = useState(null);
+  useUnsavedChanges(typed && !sent && JSON.stringify(form) !== sentSnapshot, {
+    message: 'Your message to this centre hasn’t been sent yet. Leaving will discard it.',
+    onDiscard: () => setForm(blank),
+  });
 
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
@@ -94,9 +103,12 @@ function ContactPanel({ centre, initialTab }) {
         consent: true,
       });
       setSent({ type: tab, message: payload.message });
+      setSentSnapshot(JSON.stringify(form));
+      toast.success(payload.message || 'Your request was sent.');
     } catch (error) {
       const fieldErrors = Object.fromEntries(Object.entries(error.errors || {}).map(([key, value]) => [key, value[0]]));
       setErrors(Object.keys(fieldErrors).length ? fieldErrors : { form: error.message });
+      toast.error(Object.values(fieldErrors)[0] || error.message);
     } finally {
       setSending(false);
     }

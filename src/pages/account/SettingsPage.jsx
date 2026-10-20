@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Checkmark, ErrorState, Field, Input, Modal, PageLoader, Select, Switch } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useOptions } from '../../hooks/useOptions.js';
 import { useResource } from '../../hooks/useResource.js';
@@ -32,16 +33,15 @@ function AccountSection({ user }) {
   const isCentre = user.role === 'childcare_centre';
   const profile = user.educator_profile;
   const centre = user.childcare_centres?.[0];
-  const initial = {
-    name: user.name || '',
-    first_name: profile?.first_name || '',
-    last_name: profile?.last_name || '',
+  const [initial, setInitial] = useState(() => ({
+    first_name: user.first_name || profile?.first_name || '',
+    last_name: user.last_name || profile?.last_name || '',
     phone: user.phone || '',
     city: (profile || centre)?.city || '',
     postal_code: (profile || centre)?.postal_code || '',
     province: (profile || centre)?.province || 'British Columbia',
     country: (profile || centre)?.country || 'Canada',
-  };
+  }));
   const [form, setForm] = useState(initial);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -54,17 +54,24 @@ function AccountSection({ user }) {
     setSaving(true);
     setErrors({});
     try {
-      const payload = isEducator ? form : isCentre ? { phone: form.phone } : { name: form.name, phone: form.phone };
+      // Every role saves the account holder's first/last name; only educators also save a location here.
+      const names = { first_name: form.first_name, last_name: form.last_name, phone: form.phone };
+      const payload = isEducator ? form : names;
       const response = await updateAccount(payload);
+      setInitial(form);
       setUser(response.data);
       setSaved(true);
+      toast.success(response.message || 'Account details saved.');
+      return true;
     } catch (error) {
       setErrors(fieldErrors(error));
-      if (!error.errors || !Object.keys(error.errors).length) toast.error(error);
+      toast.error(Object.values(fieldErrors(error))[0] || error.message);
+      return false;
     } finally {
       setSaving(false);
     }
   }
+  useUnsavedChanges(JSON.stringify(form) !== JSON.stringify(initial), { onSave: save, message: 'Your account details have changes that haven’t been saved.' });
 
   return (
     <section className="st-card">
@@ -73,19 +80,9 @@ function AccountSection({ user }) {
         <span>{isEducator ? 'Your contact information. Centres see it only after you apply.' : isCentre ? 'Sign-in and contact details for this account. Centre details live in your centre profile.' : 'Your name and contact details for this account.'}</span>
       </div>
       <div className="ec-grid-2">
-        {isEducator ? (
-          <>
-            <Field label="First name" error={errors.first_name}><Input value={form.first_name} onChange={set('first_name')} autoComplete="given-name" maxLength={100} /></Field>
-            <Field label="Last name" error={errors.last_name}><Input value={form.last_name} onChange={set('last_name')} autoComplete="family-name" maxLength={100} /></Field>
-          </>
-        ) : isCentre ? (
-          <>
-            <Field label="Centre"><Input value={centre?.name || ''} disabled /></Field>
-            <Field label="Account holder"><Input value={user.name} disabled /></Field>
-          </>
-        ) : (
-          <Field label="Full name" error={errors.name}><Input value={form.name} onChange={set('name')} autoComplete="name" maxLength={255} /></Field>
-        )}
+        {isCentre && <Field label="Centre" className="st-span"><Input value={centre?.name || ''} disabled /></Field>}
+        <Field label={isCentre ? 'Account holder first name' : 'First name'} error={errors.first_name}><Input value={form.first_name} onChange={set('first_name')} autoComplete="given-name" maxLength={100} /></Field>
+        <Field label={isCentre ? 'Account holder last name' : 'Last name'} error={errors.last_name}><Input value={form.last_name} onChange={set('last_name')} autoComplete="family-name" maxLength={100} /></Field>
         <div className="ec-label">
           <span>Email</span>
           <span className="st-email">
@@ -135,6 +132,7 @@ function ChangeEmailModal({ user, onClose }) {
       onClose();
     } catch (error) {
       setErrors(fieldErrors(error));
+      toast.error(Object.values(fieldErrors(error))[0] || error.message);
     } finally {
       setSaving(false);
     }
@@ -165,25 +163,36 @@ function SecuritySection({ user }) {
         : params.get('oauth_error') ? 'Connecting was cancelled or expired. Please try again.' : '';
 
   async function submit(event) {
-    event.preventDefault();
+    event?.preventDefault();
     const nextErrors = {};
     if (!passwordStrength(form.password).valid) nextErrors.password = 'Use 10+ characters with a number and a symbol.';
     if (form.password !== form.password_confirmation) nextErrors.password_confirmation = 'The passwords don’t match.';
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    if (Object.keys(nextErrors).length) {
+      toast.error(Object.values(nextErrors)[0]);
+      return false;
+    }
     setSaving(true);
     try {
       await changePassword(form);
       setForm({ current_password: '', password: '', password_confirmation: '' });
       toast.success('Password updated.');
       setUser({ ...user, has_password: true });
+      return true;
     } catch (error) {
       setErrors(fieldErrors(error));
-      if (!error.errors || !Object.keys(error.errors).length) toast.error(error);
+      toast.error(Object.values(fieldErrors(error))[0] || error.message);
+      return false;
     } finally {
       setSaving(false);
     }
   }
+  useUnsavedChanges(Object.values(form).some(Boolean), {
+    onSave: submit,
+    saveLabel: 'Update password & leave',
+    message: 'You started changing your password but haven’t saved it.',
+    onDiscard: () => setForm({ current_password: '', password: '', password_confirmation: '' }),
+  });
 
   async function disconnect(provider) {
     try {
@@ -260,6 +269,7 @@ function NotificationsSection({ user }) {
     setData((current) => ({ ...current, preferences: next }));
     try {
       await updateNotificationPreferences(changes);
+      toast.success('Notification settings saved.');
     } catch (requestError) {
       setData((current) => ({ ...current, preferences: previous }));
       toast.error(requestError);

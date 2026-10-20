@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, useBlocker, useNavigate, useParams } from 'react-router-dom';
-import { Button, ErrorState, Icon, Modal, PageLoader, Pill } from '../../components/ui/index.jsx';
+import { useCallback, useRef, useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Button, ErrorState, Icon, PageLoader, Pill } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getCentreProfile } from '../../services/centreApi.js';
@@ -61,14 +62,11 @@ export default function CentreProfileBuilderPage() {
   const stepIndex = STEP_DEFS.findIndex(([key]) => key === step);
   useDocumentTitle(stepIndex >= 0 ? `Centre profile · ${STEP_DEFS[stepIndex][1]}` : 'Centre profile');
 
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && currentLocation.pathname !== nextLocation.pathname);
-
-  useEffect(() => {
-    if (!dirty) return undefined;
-    const warn = (event) => { event.preventDefault(); event.returnValue = ''; };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
+  const guard = useUnsavedChanges(dirty, {
+    onSave: () => saveCurrent(),
+    saveLabel: 'Save & leave',
+    message: 'You have unsaved changes on this step. Save them before you leave?',
+  });
 
   const registerSave = useCallback((fn) => { saveRef.current = fn; return undefined; }, []);
   const onSaved = useCallback((updated) => {
@@ -89,6 +87,7 @@ export default function CentreProfileBuilderPage() {
     if (key === step) return;
     if (dirty && !(await saveCurrent())) return;
     setDirty(false);
+    guard.release();
     navigate(`/centre/profile/${key}`);
   }
 
@@ -141,7 +140,7 @@ export default function CentreProfileBuilderPage() {
             {step !== 'review' && (
               <div className="cb-nav">
                 {previous ? <Button variant="outline" onClick={() => goTo(previous[0])}>← {previous[1]}</Button> : <span />}
-                <Button loading={saving} onClick={async () => { if (await saveCurrent()) { setDirty(false); navigate(`/centre/profile/${next[0]}`); } }}>
+                <Button loading={saving} onClick={async () => { if (await saveCurrent()) { setDirty(false); guard.release(); navigate(`/centre/profile/${next[0]}`); } }}>
                   Save &amp; continue: {next[1]} →
                 </Button>
               </div>
@@ -161,16 +160,6 @@ export default function CentreProfileBuilderPage() {
           </aside>
         </div>
       </main>
-
-      <Modal open={blocker.state === 'blocked'} title="Save your changes?" onClose={() => blocker.reset?.()}
-        footer={(
-          <>
-            <Button variant="outline" onClick={() => { setDirty(false); blocker.proceed?.(); }}>Discard</Button>
-            <Button onClick={async () => { if (await saveCurrent()) { setDirty(false); blocker.proceed?.(); } else blocker.reset?.(); }}>Save &amp; leave</Button>
-          </>
-        )}>
-        <p className="ec-muted" style={{ margin: 0 }}>You have unsaved changes on this step.</p>
-      </Modal>
     </>
   );
 }

@@ -9,7 +9,7 @@ export const updateMyProfile = (data) => api.put('/educator/profile', data);
 export const setPracticumMode = (enabled) => api.put('/educator/profile/practicum-mode', { enabled });
 export const dismissProfileSetup = () => api.post('/educator/profile/dismiss-setup');
 /** kind: image (profile photo) | video (intro video) | resume */
-export const uploadProfileMedia = (kind, file) => api.upload(`/educator/profile/media/${kind}`, { file });
+export const uploadProfileMedia = (kind, file, options) => api.upload(`/educator/profile/media/${kind}`, { file }, options);
 export const removeProfileMedia = (kind) => api.delete(`/educator/profile/media/${kind}`);
 export const downloadMyResume = (name) => api.download('/educator/profile/resume', name || 'resume');
 

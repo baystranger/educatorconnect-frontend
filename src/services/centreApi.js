@@ -9,12 +9,12 @@ export const getCentreProfile = (options) => api.get('/centre/profile', undefine
 /** section: basics | about | programs | media | team | parents */
 export const updateCentreSection = (section, data) => api.put(`/centre/profile/${section}`, data);
 export const uploadCentreLogo = (file) => api.upload('/centre/profile/media/image', { file });
-export const uploadWelcomeVideo = (file, title) => api.upload('/centre/profile/media/video', { file, title });
+export const uploadWelcomeVideo = (file, title, options) => api.upload('/centre/profile/media/video', { file, title }, options);
 export const removeWelcomeVideo = () => api.delete('/centre/profile/media/video');
 export const uploadTeamPhoto = (memberId, file) => api.upload(`/centre/profile/team/${memberId}/photo`, { file });
 export const submitCentreProfile = () => api.post('/centre/profile/submit', { confirm: true });
 
-export const addGalleryPhotos = (files, category) => api.upload('/centre/gallery', { files, category });
+export const addGalleryPhotos = (files, category, options) => api.upload('/centre/gallery', { files, category }, options);
 export const updateGalleryItem = (id, data) => api.put(`/centre/gallery/${id}`, data);
 export const setGalleryCover = (id) => api.post(`/centre/gallery/${id}/cover`);
 export const deleteGalleryItem = (id) => api.delete(`/centre/gallery/${id}`);

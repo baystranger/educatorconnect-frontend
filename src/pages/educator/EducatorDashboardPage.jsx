@@ -46,6 +46,7 @@ export default function EducatorDashboardPage() {
     setData((current) => ({ ...current, practicum: { ...current.practicum, enabled } }));
     try {
       await setPracticumMode(enabled);
+      toast.success(enabled ? 'Practicum mode on — centres can see you’re looking for a placement.' : 'Practicum mode off.');
       refresh();
     } catch (requestError) {
       setData((current) => ({ ...current, practicum: { ...current.practicum, enabled: !enabled } }));
@@ -65,6 +66,7 @@ export default function EducatorDashboardPage() {
     patch(next);
     try {
       if (next) await saveJob(job.id); else await unsaveJob(job.id);
+      toast.success(next ? 'Job saved.' : 'Removed from saved jobs.');
     } catch (requestError) {
       patch(!next);
       toast.error(requestError);

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Avatar, Button, ErrorState, Field, Input, PageLoader, Select, Switch, Textarea } from '../../components/ui/index.jsx';
 import TagInput from '../../components/ui/TagInput.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { createListing, getMyListings, updateListing, uploadListingLogo } from '../../services/professionalApi.js';
@@ -34,6 +35,7 @@ export default function ListingEditorPage() {
   const listing = isNew ? null : mine?.listings?.find((item) => String(item.id) === listingId);
 
   const [form, setForm] = useState(EMPTY);
+  const [baseline, setBaseline] = useState(() => JSON.stringify(EMPTY));
   const [logoUrl, setLogoUrl] = useState(null);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -42,9 +44,16 @@ export default function ListingEditorPage() {
   useEffect(() => {
     if (listing) {
       setForm(toForm(listing));
+      setBaseline(JSON.stringify(toForm(listing)));
       setLogoUrl(listing.logo_url);
     }
   }, [listing]);
+
+  const guard = useUnsavedChanges(JSON.stringify(form) !== baseline, {
+    onSave: () => save(null, { stay: true }),
+    saveLabel: isNew ? 'Submit & leave' : 'Save & leave',
+    message: isNew ? 'Your new listing hasn’t been submitted yet.' : 'This listing has changes that haven’t been saved.',
+  });
 
   if (!isNew && loading) return <PageLoader />;
   if (!isNew && error) return <main className="ec-main"><div className="ec-container"><ErrorState error={error} onRetry={reload} /></div></main>;
@@ -56,8 +65,8 @@ export default function ListingEditorPage() {
   const setValue = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
   const regions = REGIONS[form.country] || REGIONS.Canada;
 
-  async function save(event) {
-    event.preventDefault();
+  async function save(event, { stay = false } = {}) {
+    event?.preventDefault();
     setSaving(true);
     setErrors({});
     const payload = { ...form, professional_category_id: Number(form.professional_category_id) || null };
@@ -67,11 +76,17 @@ export default function ListingEditorPage() {
     });
     try {
       const response = isNew ? await createListing(payload) : await updateListing(listing.id, payload);
+      setBaseline(JSON.stringify(form));
       toast.success(response.message);
-      navigate(isNew ? `/professional/listings/${response.data.id}/edit` : '/professional', { replace: isNew });
+      if (!stay) {
+        guard.release();
+        navigate(isNew ? `/professional/listings/${response.data.id}/edit` : '/professional', { replace: isNew });
+      }
+      return true;
     } catch (requestError) {
       setErrors(fieldErrors(requestError));
-      toast.error(requestError);
+      toast.error(Object.values(fieldErrors(requestError))[0] || requestError.message);
+      return false;
     } finally {
       setSaving(false);
     }

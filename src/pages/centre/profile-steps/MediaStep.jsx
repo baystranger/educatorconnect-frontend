@@ -1,8 +1,11 @@
 import { useRef, useState } from 'react';
-import { Button, Field, FilterPills, Icon, Input, Select, Switch } from '../../../components/ui/index.jsx';
+import { Button, Field, FilterPills, Icon, Input, Select, Switch, UploadProgress, VideoPlayer } from '../../../components/ui/index.jsx';
 import VideoRecorder from '../../../components/ui/VideoRecorder.jsx';
+import { VIDEO_MAX_MB, videoSizeError } from '../../../constants/uploads.js';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { useOptions } from '../../../hooks/useOptions.js';
+import { useUploadProgress } from '../../../hooks/useUploadProgress.js';
+import { isAbortError } from '../../../lib/api.js';
 import {
   addGalleryPhotos, deleteGalleryItem, removeWelcomeVideo, setGalleryCover, updateGalleryItem, uploadCentreLogo, uploadWelcomeVideo,
 } from '../../../services/centreApi.js';
@@ -58,6 +61,7 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
   const [filter, setFilter] = useState('all');
   const [selected, setSelected] = useState(centre.gallery.find((item) => item.is_cover)?.id ?? centre.gallery[0]?.id ?? null);
   const [uploading, setUploading] = useState(null);
+  const uploader = useUploadProgress();
   const [recording, setRecording] = useState(false);
   const [dragging, setDragging] = useState(false);
   const photoInput = useRef(null);
@@ -77,17 +81,27 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
       toast.success(response.message);
       return response.data;
     } catch (error) {
-      toast.error(Object.values(error.errors || {})[0]?.[0] || error.message);
+      if (isAbortError(error)) toast.info('Upload cancelled.');
+      else toast.error(Object.values(error.errors || {})[0]?.[0] || error.message);
       return null;
     } finally {
       setUploading(null);
     }
   }
 
+  function uploadVideo(file) {
+    if (videoSizeError(file)) {
+      toast.error(videoSizeError(file));
+      return null;
+    }
+    return upload('video', () => uploader.run(file.name || 'your video', (options) => uploadWelcomeVideo(file, form.welcome_video_title, options)));
+  }
+
   async function addPhotos(fileList) {
     const files = [...fileList].filter((file) => file.type.startsWith('image/')).slice(0, 12);
     if (!files.length) return;
-    const updated = await upload('photos', () => addGalleryPhotos(files, filter === 'all' ? 'classrooms' : filter));
+    const label = files.length === 1 ? files[0].name : `${files.length} photos`;
+    const updated = await upload('photos', () => uploader.run(label, (options) => addGalleryPhotos(files, filter === 'all' ? 'classrooms' : filter, options)));
     if (updated && !selected) setSelected(updated.gallery[0]?.id ?? null);
   }
 
@@ -95,21 +109,26 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
     <>
       <StepTitle number={4} title="Photos & video" description="Show your spaces and people. Profiles with a video and 12+ photos get the most tour requests." />
       <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(event) => { addPhotos(event.target.files); event.target.value = ''; }} />
-      <input ref={videoInput} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) upload('video', () => uploadWelcomeVideo(file, form.welcome_video_title)); }} />
+      <input ref={videoInput} type="file" accept="video/mp4,video/quicktime,video/webm" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) uploadVideo(file); }} />
       <input ref={logoInput} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) upload('logo', () => uploadCentreLogo(file)); }} />
 
       <section className="cb-card">
-        <div className="cb-card-head"><h3>Welcome video</h3><span>30–90 seconds · MP4, MOV or WebM · up to 200 MB</span></div>
+        <div className="cb-card-head"><h3>Welcome video</h3><span>30–90 seconds · MP4, MOV or WebM · up to {VIDEO_MAX_MB} MB</span></div>
         <div className="cb-video">
-          {centre.welcome_video ? (
-            <div className="cb-video-stage">{/* eslint-disable-next-line jsx-a11y/media-has-caption */}<video src={centre.welcome_video.url} controls playsInline preload="metadata" /></div>
+          {uploading === 'video' ? (
+            <div className="cb-video-stage cb-video-empty">
+              <Icon name="video" size={28} />
+              <UploadProgress progress={uploader.progress} onCancel={uploader.cancel} />
+            </div>
+          ) : centre.welcome_video ? (
+            <VideoPlayer className="cb-video-stage" src={centre.welcome_video.url} label="your welcome video" />
           ) : (
             <div className="cb-video-stage cb-video-empty">
               <Icon name="video" size={28} />
-              <span>{uploading === 'video' ? 'Uploading… large videos can take a minute.' : 'No welcome video yet'}</span>
+              <span>No welcome video yet</span>
               <span className="ec-row-flex" style={{ gap: 8 }}>
-                <Button size="xs" onClick={() => videoInput.current?.click()} loading={uploading === 'video'}>Upload</Button>
-                <Button size="xs" variant="outline" onClick={() => setRecording(true)}>Record</Button>
+                <Button size="xs" onClick={() => videoInput.current?.click()} disabled={uploader.busy}>Upload</Button>
+                <Button size="xs" variant="outline" onClick={() => setRecording(true)} disabled={uploader.busy}>Record</Button>
               </span>
             </div>
           )}
@@ -119,10 +138,10 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
               <span className="ec-row-flex" style={{ gap: 8, fontWeight: 600, fontSize: 14 }}>
                 <Switch size="sm" checked={form.welcome_video_captions} onChange={(value) => setForm((current) => ({ ...current, welcome_video_captions: value }))} label="Auto-captions" />Auto-captions
               </span>
-              {centre.welcome_video && (
+              {centre.welcome_video && uploading !== 'video' && (
                 <>
-                  <Button size="sm" variant="outline" loading={uploading === 'video'} onClick={() => videoInput.current?.click()}>Replace</Button>
-                  <Button size="sm" variant="danger" loading={uploading === 'remove'} onClick={() => upload('remove', removeWelcomeVideo)}>Remove</Button>
+                  <Button size="sm" variant="outline" disabled={uploader.busy} onClick={() => videoInput.current?.click()}>Replace</Button>
+                  <Button size="sm" variant="danger" disabled={uploader.busy} loading={uploading === 'remove'} onClick={() => upload('remove', removeWelcomeVideo)}>Remove</Button>
                 </>
               )}
             </div>
@@ -134,6 +153,7 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
         <div className="cb-card-head"><h3>Photo gallery <span className="ec-muted" style={{ fontWeight: 500, fontSize: 15 }}>· {photos.length} {photos.length === 1 ? 'photo' : 'photos'}</span></h3><span>JPG, PNG or WebP · up to 10 MB each · aim for 12+</span></div>
         <FilterPills label="Photo categories" value={filter} onChange={setFilter}
           options={[{ key: 'all', label: `All · ${photos.length}` }, ...categories.map((category) => ({ key: category.key, label: `${category.label} · ${counts[category.key] || 0}` }))]} />
+        {uploading === 'photos' && <UploadProgress progress={uploader.progress} onCancel={uploader.cancel} />}
         <div className="cb-gallery">
           <button
             type="button"
@@ -142,7 +162,7 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
             onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             onDrop={(event) => { event.preventDefault(); setDragging(false); addPhotos(event.dataTransfer.files); }}
-            disabled={uploading === 'photos'}
+            disabled={uploader.busy}
           >
             <Icon name="plus" size={20} />
             {uploading === 'photos' ? 'Uploading…' : 'Add photos'}
@@ -174,7 +194,7 @@ export default function MediaStep({ centre, onSaved, ...handlers }) {
           </div>
         </div>
       </section>
-      <VideoRecorder open={recording} title="Record your welcome video" onClose={() => setRecording(false)} onRecorded={(file) => upload('video', () => uploadWelcomeVideo(file, form.welcome_video_title))} />
+      <VideoRecorder open={recording} title="Record your welcome video" onClose={() => setRecording(false)} onRecorded={uploadVideo} />
     </>
   );
 }

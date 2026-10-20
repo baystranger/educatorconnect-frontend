@@ -59,3 +59,4 @@
   .st-pref-row { flex-direction: column; align-items: stretch; }
   .st-pref-row .ec-select { width: 100%; }
 }
+.st-span { grid-column: 1 / -1; }

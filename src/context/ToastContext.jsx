@@ -18,6 +18,7 @@ export function ToastProvider({ children }) {
 
   const value = useMemo(() => ({
     success: (message) => show(message, 'success'),
+    info: (message) => show(message, 'info'),
     error: (errorOrMessage) => show(typeof errorOrMessage === 'string' ? errorOrMessage : errorOrMessage?.message, 'error'),
   }), [show]);
 
@@ -26,7 +27,7 @@ export function ToastProvider({ children }) {
       {children}
       <div className="ec-toasts" aria-live="polite">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`ec-toast ${toast.tone === 'error' ? 'ec-toast-error' : ''}`} role={toast.tone === 'error' ? 'alert' : 'status'}>
+          <div key={toast.id} className={`ec-toast ec-toast-${toast.tone}`} role={toast.tone === 'error' ? 'alert' : 'status'}>
             <span>{toast.message}</span>
             <button type="button" aria-label="Dismiss" onClick={() => dismiss(toast.id)}>×</button>
           </div>

@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import Header from '../../components/Header.jsx';
 import AppNav from '../../components/layout/AppNav.jsx';
-import { ErrorState, Icon, PageLoader } from '../../components/ui/index.jsx';
+import { ErrorState, Icon, PageLoader, VideoPlayer } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
@@ -71,8 +71,7 @@ export default function EducatorPublicPage() {
           {profile.introduction_video_url && (
             <section className="ep-section">
               <div className="ep-section-head"><h2>Introduction video</h2></div>
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-              <video src={profile.introduction_video_url} controls playsInline preload="metadata" style={{ width: '100%', maxHeight: 380, borderRadius: 14, background: '#17121F' }} />
+              <VideoPlayer src={profile.introduction_video_url} label={`${profile.full_name || 'the educator'}'s introduction video`} style={{ maxHeight: 380 }} />
             </section>
           )}
           {profile.professional_summary && <section className="ep-section"><div className="ep-section-head"><h2>About me</h2></div><p className="ep-text">{profile.professional_summary}</p></section>}

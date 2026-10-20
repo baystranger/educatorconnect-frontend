@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { AppLayout, GuestOnly, RequireRole, ScrollManager } from '../components/layout/Layouts.jsx';
 import { PageLoader } from '../components/ui/index.jsx';
 import { ROLES } from '../constants/roles.js';
+import { UnsavedChangesProvider } from '../context/UnsavedChangesContext.jsx';
 import RouteError from '../pages/RouteError.jsx';
 
 // Public
@@ -46,12 +47,12 @@ const SettingsPage = lazy(() => import('../pages/account/SettingsPage.jsx'));
 
 function Root() {
   return (
-    <>
+    <UnsavedChangesProvider>
       <ScrollManager />
       <Suspense fallback={<PageLoader />}>
         <Outlet />
       </Suspense>
-    </>
+    </UnsavedChangesProvider>
   );
 }
 
