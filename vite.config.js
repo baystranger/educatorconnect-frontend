@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => {
         '/api': backend,
         '/sanctum': backend,
         '/oauth': backend,
+        '/storage': backend,
       },
     },
   };

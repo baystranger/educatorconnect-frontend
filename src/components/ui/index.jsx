@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { avatarTone } from '../../utils/format.js';
+import { avatarTone, fileSize } from '../../utils/format.js';
 import Icon from './Icon.jsx';
 
 export { default as Icon } from './Icon.jsx';
@@ -207,6 +207,47 @@ export function ErrorState({ error, onRetry, title = 'We couldn’t load this' }
 
 export function Alert({ tone = 'info', children }) {
   return <div className={`ec-alert ec-alert-${tone}`} role={tone === 'error' ? 'alert' : 'status'}>{children}</div>;
+}
+
+/** Video with a large Play button over its first frame; the normal controls take over once it plays. */
+export function VideoPlayer({ src, label = 'video', className = '', style }) {
+  const ref = useRef(null);
+  const [started, setStarted] = useState(false);
+  useEffect(() => setStarted(false), [src]);
+
+  return (
+    <div className={`ec-player ${className}`} style={style}>
+      {/* `#t=0.1` makes browsers draw the first frame instead of a black box. */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <video ref={ref} src={`${src}#t=0.1`} controls={started} playsInline preload="metadata" onPlay={() => setStarted(true)} />
+      {!started && (
+        <button type="button" className="ec-player-play" aria-label={`Play ${label}`} onClick={() => ref.current?.play()}>
+          <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor" /></svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Upload progress bar fed by useUploadProgress(). At 100% the server is still saving, so it says so. */
+export function UploadProgress({ progress, onCancel }) {
+  if (!progress) return null;
+  const processing = progress.percent >= 100;
+  return (
+    <div className="ec-upload">
+      <div className="ec-upload-head">
+        <span className="ec-upload-name">{processing ? 'Processing…' : `Uploading ${progress.label}`}</span>
+        <span className="ec-upload-percent">{progress.percent}%</span>
+      </div>
+      <div className="ec-progress" role="progressbar" aria-label={`Uploading ${progress.label}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress.percent}>
+        <span className={processing ? 'is-processing' : ''} style={{ width: `${progress.percent}%` }} />
+      </div>
+      <div className="ec-upload-foot">
+        <small>{processing ? 'Almost done — saving your file.' : progress.total ? `${fileSize(progress.loaded) || '0 KB'} of ${fileSize(progress.total)}` : 'Starting…'}</small>
+        {onCancel && !processing && <button type="button" className="ec-link-btn" onClick={onCancel}>Cancel</button>}
+      </div>
+    </div>
+  );
 }
 
 export function Modal({ open, title, onClose, children, footer }) {

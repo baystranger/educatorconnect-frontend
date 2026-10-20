@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button, ChoiceChips, ErrorState, Field, Icon, Input, Modal, PageLoader, Select, Textarea } from '../../components/ui/index.jsx';
+import { Button, ChoiceChips, ErrorState, Field, Icon, Input, Modal, PageLoader, Select, Textarea, UploadProgress, VideoPlayer } from '../../components/ui/index.jsx';
 import TagInput from '../../components/ui/TagInput.jsx';
 import VideoRecorder from '../../components/ui/VideoRecorder.jsx';
+import { VIDEO_MAX_MB, videoSizeError } from '../../constants/uploads.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useOptions } from '../../hooks/useOptions.js';
 import { useResource } from '../../hooks/useResource.js';
+import { useUploadProgress } from '../../hooks/useUploadProgress.js';
+import { isAbortError } from '../../lib/api.js';
 import {
   addCredential, deleteCredential, downloadMyResume, getMyProfile, removeProfileMedia, updateCredential,
   updateMyProfile, uploadProfileMedia,
@@ -40,30 +44,41 @@ function useFilePicker(accept, onPick) {
   return [input, () => ref.current?.click()];
 }
 
+/** Modal form state that also reports unsaved edits to the leave-page guard. */
+function useModalForm(toInitial, submit) {
+  const [initial] = useState(toInitial);
+  const [form, setForm] = useState(initial);
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial);
+  useUnsavedChanges(dirty, { onSave: () => submit(form) });
+  return [form, setForm];
+}
+
 function CredentialModal({ credential, onClose, onSaved }) {
   const toast = useToast();
-  const [form, setForm] = useState({
+  const [form, setForm] = useModalForm(() => ({
     kind: credential?.kind || 'certification',
     title: credential?.title || '',
     issuer: credential?.issuer || '',
     issued_on: credential?.issued_on || '',
     expires_on: credential?.expires_on || '',
-  });
+  }), (values) => save(values));
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
-  async function save() {
+  async function save(values = form) {
     setSaving(true);
     setErrors({});
-    const payload = { ...form, issued_on: form.issued_on || null, expires_on: form.expires_on || null, issuer: form.issuer || null };
+    const payload = { ...values, issued_on: values.issued_on || null, expires_on: values.expires_on || null, issuer: values.issuer || null };
     try {
       const response = credential ? await updateCredential(credential.id, payload) : await addCredential(payload);
       toast.success(response.message);
       onSaved();
+      return true;
     } catch (error) {
       setErrors(Object.fromEntries(Object.entries(error.errors || {}).map(([key, value]) => [key, value[0]])));
-      if (!error.errors || !Object.keys(error.errors).length) toast.error(error);
+      toast.error(Object.values(error.errors || {})[0]?.[0] || error.message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -71,7 +86,7 @@ function CredentialModal({ credential, onClose, onSaved }) {
 
   return (
     <Modal open title={credential ? 'Edit credential' : 'Add a certification or education'} onClose={onClose}
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={save} loading={saving} disabled={!form.title.trim()}>Save</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={() => save()} loading={saving} disabled={!form.title.trim()}>Save</Button></>}>
       <ChoiceChips label="Type" value={form.kind} onChange={(kind) => setForm((current) => ({ ...current, kind }))}
         options={[{ key: 'certification', label: 'Certification' }, { key: 'education', label: 'Education' }]} />
       <Field label={form.kind === 'education' ? 'Program or degree' : 'Certificate'} error={errors.title}>
@@ -90,17 +105,23 @@ function CredentialModal({ credential, onClose, onSaved }) {
 }
 
 function DetailsModal({ profile, onClose, onSave }) {
-  const [form, setForm] = useState({
+  const [saving, setSaving] = useState(false);
+  const submit = async (values) => {
+    setSaving(true);
+    const ok = await onSave({ ...values, years_experience: values.years_experience === '' ? null : Number(values.years_experience) });
+    setSaving(false);
+    return ok;
+  };
+  const [form, setForm] = useModalForm(() => ({
     first_name: profile.first_name, last_name: profile.last_name, professional_title: profile.professional_title || '',
     years_experience: profile.years_experience ?? '', languages: profile.languages, city: profile.city || '',
     province: profile.province || '', postal_code: profile.postal_code || '',
-  });
-  const [saving, setSaving] = useState(false);
+  }), submit);
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
   return (
     <Modal open title="Your details" onClose={onClose}
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={async () => { setSaving(true); await onSave({ ...form, years_experience: form.years_experience === '' ? null : Number(form.years_experience) }); setSaving(false); }}>Save</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={() => submit(form)}>Save</Button></>}>
       <div className="ec-grid-2">
         <Field label="First name"><Input value={form.first_name} onChange={set('first_name')} maxLength={100} /></Field>
         <Field label="Last name"><Input value={form.last_name} onChange={set('last_name')} maxLength={100} /></Field>
@@ -120,17 +141,18 @@ function DetailsModal({ profile, onClose, onSave }) {
 }
 
 function SkillsModal({ profile, onClose, onSave }) {
-  const [form, setForm] = useState({
+  const [saving, setSaving] = useState(false);
+  const submit = async (values) => { setSaving(true); const ok = await onSave(values); setSaving(false); return ok; };
+  const [form, setForm] = useModalForm(() => ({
     age_groups_preferred: profile.age_groups_preferred, areas_of_expertise: profile.areas_of_expertise,
     special_interests: profile.special_interests, professional_development: profile.professional_development,
-  });
-  const [saving, setSaving] = useState(false);
+  }), submit);
   const field = (key, label, suggestions) => (
     <Field label={label}><TagInput label={label} value={form[key]} onChange={(value) => setForm((current) => ({ ...current, [key]: value }))} suggestions={suggestions} /></Field>
   );
   return (
     <Modal open title="Skills & experience" onClose={onClose}
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={async () => { setSaving(true); await onSave(form); setSaving(false); }}>Save</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={() => submit(form)}>Save</Button></>}>
       {field('age_groups_preferred', 'Age groups', AGE_GROUPS)}
       {field('areas_of_expertise', 'Areas of expertise', ['Primary caregiving', 'Emergent curriculum', 'Inclusion support', 'Outdoor learning'])}
       {field('special_interests', 'Special interests', ['Music & movement', 'Art', 'Outdoor sensory play', 'Literacy'])}
@@ -140,11 +162,17 @@ function SkillsModal({ profile, onClose, onSave }) {
 }
 
 function PreferencesModal({ profile, onClose, onSave }) {
-  const [form, setForm] = useState({ availability: profile.availability, available_from: profile.available_from || '', search_radius_km: profile.search_radius_km, open_to_relocation: profile.open_to_relocation });
   const [saving, setSaving] = useState(false);
+  const submit = async (values) => {
+    setSaving(true);
+    const ok = await onSave({ ...values, available_from: values.available_from || null, search_radius_km: Number(values.search_radius_km) });
+    setSaving(false);
+    return ok;
+  };
+  const [form, setForm] = useModalForm(() => ({ availability: profile.availability, available_from: profile.available_from || '', search_radius_km: profile.search_radius_km, open_to_relocation: profile.open_to_relocation }), submit);
   return (
     <Modal open title="Availability & search" onClose={onClose}
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={async () => { setSaving(true); await onSave({ ...form, available_from: form.available_from || null, search_radius_km: Number(form.search_radius_km) }); setSaving(false); }}>Save</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={() => submit(form)}>Save</Button></>}>
       <Field label="Availability"><ChoiceChips multiple label="Availability" value={form.availability} onChange={(availability) => setForm((current) => ({ ...current, availability }))} options={AVAILABILITY.map((item) => ({ key: item, label: item }))} /></Field>
       <div className="ec-grid-2">
         <Field label="Can start"><Input type="date" value={form.available_from} onChange={(event) => setForm((current) => ({ ...current, available_from: event.target.value }))} /></Field>
@@ -157,17 +185,19 @@ function PreferencesModal({ profile, onClose, onSave }) {
 }
 
 function StudentModal({ profile, options, onClose, onSave }) {
-  const [form, setForm] = useState({ ...profile.student });
   const [saving, setSaving] = useState(false);
+  const submit = async (values) => {
+    setSaving(true);
+    const clean = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value === '' ? null : value]));
+    const ok = await onSave({ student: { ...clean, enabled: true, required_practicum_hours: clean.required_practicum_hours ? Number(clean.required_practicum_hours) : null } });
+    setSaving(false);
+    return ok;
+  };
+  const [form, setForm] = useModalForm(() => ({ ...profile.student }), submit);
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
   return (
     <Modal open title="ECE student information" onClose={onClose}
-      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={async () => {
-        setSaving(true);
-        const clean = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value === '' ? null : value]));
-        await onSave({ student: { ...clean, enabled: true, required_practicum_hours: clean.required_practicum_hours ? Number(clean.required_practicum_hours) : null } });
-        setSaving(false);
-      }}>Save</Button></>}>
+      footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button loading={saving} onClick={() => submit(form)}>Save</Button></>}>
       <Field label="College or university"><Input value={form.college_university || ''} onChange={set('college_university')} maxLength={150} /></Field>
       <Field label="Program"><Input value={form.program || ''} onChange={set('program')} maxLength={150} /></Field>
       <div className="ec-grid-2">
@@ -188,6 +218,15 @@ function EditableText({ title, value, placeholder, hint, onSave, emptyTitle, emp
   const [draft, setDraft] = useState(value || '');
   const [saving, setSaving] = useState(false);
   useEffect(() => setDraft(value || ''), [value]);
+
+  async function submit() {
+    setSaving(true);
+    const ok = await onSave(draft.trim());
+    setSaving(false);
+    if (ok) setEditing(false);
+    return ok;
+  }
+  useUnsavedChanges(editing && draft.trim() !== (value || '').trim(), { onSave: submit, onDiscard: () => { setDraft(value || ''); setEditing(false); } });
 
   if (!value && !editing) {
     return (
@@ -212,7 +251,7 @@ function EditableText({ title, value, placeholder, hint, onSave, emptyTitle, emp
             <span className="ec-muted" style={{ fontSize: 13 }}>{hint}</span>
             <span className="ec-row-flex" style={{ gap: 8 }}>
               <Button size="sm" variant="outline" onClick={() => { setDraft(value || ''); setEditing(false); }}>Cancel</Button>
-              <Button size="sm" loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(draft.trim()); setSaving(false); if (ok) setEditing(false); }}>Save</Button>
+              <Button size="sm" loading={saving} onClick={submit}>Save</Button>
             </span>
           </div>
         </div>
@@ -233,10 +272,21 @@ export default function EducatorProfilePage() {
   const [uploading, setUploading] = useState(null);
   const [recording, setRecording] = useState(false);
   const [portfolioDraft, setPortfolioDraft] = useState(null);
+  const uploader = useUploadProgress();
+  useUnsavedChanges(Boolean(portfolioDraft && (portfolioDraft.title.trim() || portfolioDraft.url.trim())), {
+    message: 'You started adding a portfolio link but haven’t saved it yet.',
+    onDiscard: () => setPortfolioDraft(null),
+  });
 
   useEffect(() => {
     if (profile && hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [profile, hash]);
+
+  const saveAndClose = async (changes) => {
+    const ok = await save(changes);
+    if (ok) setModal(null);
+    return ok;
+  };
 
   async function save(changes, message = 'Profile saved.') {
     try {
@@ -252,14 +302,21 @@ export default function EducatorProfilePage() {
   }
 
   async function upload(kind, file) {
+    if (kind === 'video' && videoSizeError(file)) {
+      toast.error(videoSizeError(file));
+      return;
+    }
     setUploading(kind);
     try {
-      const payload = await uploadProfileMedia(kind, file);
+      const payload = kind === 'video'
+        ? await uploader.run(file.name || 'your video', (options) => uploadProfileMedia(kind, file, options))
+        : await uploadProfileMedia(kind, file);
       setData(payload.data);
       toast.success(kind === 'resume' ? 'Résumé uploaded.' : kind === 'video' ? 'Video uploaded.' : 'Photo updated.');
       refresh();
     } catch (requestError) {
-      toast.error(requestError.field('file') || requestError.message);
+      if (isAbortError(requestError)) toast.info('Upload cancelled.');
+      else toast.error(requestError.field('file') || requestError.message);
     } finally {
       setUploading(null);
     }
@@ -328,13 +385,18 @@ export default function EducatorProfilePage() {
         <div className="ep-layout">
           <div className="ec-stack" style={{ gap: 18 }}>
             <section className="ep-section" id="video">
-              <div className="ep-section-head"><h2>Introduction video</h2><span>Recommended 30–60 seconds</span></div>
-              {profile.introduction_video_url ? (
+              <div className="ep-section-head"><h2>Introduction video</h2><span>30–60 seconds · MP4, MOV or WebM · up to {VIDEO_MAX_MB} MB</span></div>
+              {uploading === 'video' ? (
+                <div className="ep-dropzone">
+                  <span className="ep-drop-icon"><Icon name="video" size={28} /></span>
+                  <UploadProgress progress={uploader.progress} onCancel={uploader.cancel} />
+                </div>
+              ) : profile.introduction_video_url ? (
                 <div className="ep-video">
                   {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                  <video src={profile.introduction_video_url} controls playsInline preload="metadata" />
+                  <VideoPlayer src={profile.introduction_video_url} label="your introduction video" />
                   <div className="ep-drop-actions">
-                    <Button size="sm" variant="outline" onClick={pickVideo} loading={uploading === 'video'}>Replace</Button>
+                    <Button size="sm" variant="outline" onClick={pickVideo}>Replace</Button>
                     <Button size="sm" variant="danger" onClick={() => removeMedia('video')}>Remove</Button>
                   </div>
                 </div>
@@ -343,7 +405,7 @@ export default function EducatorProfilePage() {
                   <span className="ep-drop-icon"><Icon name="video" size={28} /></span>
                   <div className="ep-drop-copy"><strong>Let centres meet you before the interview</strong><span>Say hello, share why you love working with children and what a great day in your room looks like.</span></div>
                   <div className="ep-drop-actions">
-                    <Button size="sm" onClick={pickVideo} loading={uploading === 'video'}>{uploading === 'video' ? 'Uploading…' : 'Upload video'}</Button>
+                    <Button size="sm" onClick={pickVideo}>Upload video</Button>
                     <Button size="sm" variant="outline" onClick={() => setRecording(true)} style={{ color: '#42007B' }}>Record now</Button>
                   </div>
                 </div>
@@ -535,10 +597,10 @@ export default function EducatorProfilePage() {
       </div>
 
       {modal === 'credential' && <CredentialModal credential={credential} onClose={() => setModal(null)} onSaved={() => { setModal(null); reload({ silent: true }); }} />}
-      {modal === 'details' && <DetailsModal profile={profile} onClose={() => setModal(null)} onSave={async (changes) => { if (await save(changes)) setModal(null); }} />}
-      {modal === 'skills' && <SkillsModal profile={profile} onClose={() => setModal(null)} onSave={async (changes) => { if (await save(changes)) setModal(null); }} />}
-      {modal === 'preferences' && <PreferencesModal profile={profile} onClose={() => setModal(null)} onSave={async (changes) => { if (await save(changes)) setModal(null); }} />}
-      {modal === 'student' && <StudentModal profile={profile} options={options} onClose={() => setModal(null)} onSave={async (changes) => { if (await save(changes)) setModal(null); }} />}
+      {modal === 'details' && <DetailsModal profile={profile} onClose={() => setModal(null)} onSave={saveAndClose} />}
+      {modal === 'skills' && <SkillsModal profile={profile} onClose={() => setModal(null)} onSave={saveAndClose} />}
+      {modal === 'preferences' && <PreferencesModal profile={profile} onClose={() => setModal(null)} onSave={saveAndClose} />}
+      {modal === 'student' && <StudentModal profile={profile} options={options} onClose={() => setModal(null)} onSave={saveAndClose} />}
       <VideoRecorder open={recording} title="Record your introduction" onClose={() => setRecording(false)} onRecorded={(file) => upload('video', file)} />
     </main>
   );

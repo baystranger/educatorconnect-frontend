@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Button, Field, Input, Modal, Textarea } from './ui/index.jsx';
 import { useToast } from '../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../context/UnsavedChangesContext.jsx';
 import { claimListing } from '../services/professionalApi.js';
 
 const fieldErrors = (error) => Object.fromEntries(Object.entries(error?.errors || {}).map(([key, value]) => [key, value[0]]));
@@ -15,6 +16,7 @@ export default function ClaimListingModal({ listing, onClose, onClaimed }) {
   const [busy, setBusy] = useState(false);
   const set = (key) => (event) => setForm((current) => ({ ...current, [key]: event.target.value }));
   const hasEvidence = Object.values(form).some((value) => value.trim()) || file;
+  useUnsavedChanges(Boolean(hasEvidence), { message: 'Your claim hasn’t been submitted yet. Leaving will discard it.' });
 
   async function submit() {
     setBusy(true);
@@ -29,6 +31,7 @@ export default function ClaimListingModal({ listing, onClose, onClaimed }) {
     } catch (requestError) {
       setErrors(fieldErrors(requestError));
       if (!Object.keys(requestError.errors || {}).length) setError(requestError.message);
+      toast.error(Object.values(fieldErrors(requestError))[0] || requestError.message);
     } finally {
       setBusy(false);
     }

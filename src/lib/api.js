@@ -136,28 +136,89 @@ export async function request(path, { method = 'GET', body, query, signal, raw =
     throw new ApiError('The server returned an unexpected response.', response.status);
   }
 
-  if (!response.ok) {
-    if (response.status === 401 && unauthorizedHandler) unauthorizedHandler();
-    const fallback = STATUS_MESSAGES[response.status] || STATUS_MESSAGES[500];
-    const message = response.status >= 500 ? fallback : payload?.message || fallback;
-    throw new ApiError(message, response.status, payload?.errors || {});
-  }
+  if (!response.ok) throw failure(response.status, payload);
 
   return payload;
 }
+
+/** Builds the ApiError for a failed response (and signs the user out on 401). */
+function failure(status, payload) {
+  if (status === 401 && unauthorizedHandler) unauthorizedHandler();
+  const fallback = STATUS_MESSAGES[status] || STATUS_MESSAGES[500];
+  const message = status >= 500 ? fallback : payload?.message || fallback;
+  return new ApiError(message, status, payload?.errors || {});
+}
+
+/**
+ * Multipart POST that reports upload progress. fetch() can't observe request-body
+ * progress, so this uses XMLHttpRequest with the same CSRF, envelope and error handling.
+ *
+ * @param {(progress: { loaded: number, total: number, percent: number }) => void} onProgress
+ */
+async function uploadWithProgress(path, form, { onProgress, signal } = {}, retried = false) {
+  await ensureCsrfCookie();
+  const token = readCookie('XSRF-TOKEN');
+
+  const { status, text } = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', buildUrl(path));
+    xhr.withCredentials = true;
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    if (token) xhr.setRequestHeader('X-XSRF-TOKEN', token);
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return;
+      onProgress({ loaded: event.loaded, total: event.total, percent: Math.min(100, Math.round((event.loaded / event.total) * 100)) });
+    };
+    xhr.onload = () => resolve({ status: xhr.status, text: xhr.responseText });
+    xhr.onerror = () => reject(new ApiError(STATUS_MESSAGES[0], 0));
+    xhr.onabort = () => reject(new DOMException('The upload was cancelled.', 'AbortError'));
+
+    if (signal?.aborted) {
+      reject(new DOMException('The upload was cancelled.', 'AbortError'));
+      return;
+    }
+    signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+    xhr.send(form);
+  });
+
+  // Stale CSRF token: refresh it once and retry from 0%.
+  if (status === 419 && !retried) {
+    await ensureCsrfCookie(true);
+    onProgress({ loaded: 0, total: 0, percent: 0 });
+    return uploadWithProgress(path, form, { onProgress, signal }, true);
+  }
+
+  let payload = null;
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    if (status < 200 || status >= 300) throw new ApiError(STATUS_MESSAGES[status] || STATUS_MESSAGES[500], status);
+    throw new ApiError('The server returned an unexpected response.', status);
+  }
+
+  if (status < 200 || status >= 300) throw failure(status, payload);
+  return payload;
+}
+
+/** True when a request or upload was cancelled on purpose (AbortController / Cancel button). */
+export const isAbortError = (error) => error?.name === 'AbortError';
 
 export const api = {
   get: (path, query, options) => request(path, { ...options, query }),
   post: (path, body, options) => request(path, { ...options, method: 'POST', body }),
   put: (path, body, options) => request(path, { ...options, method: 'PUT', body }),
   delete: (path, options) => request(path, { ...options, method: 'DELETE' }),
-  upload: (path, fields, options) => {
+  /** Pass `{ onProgress, signal }` to get upload progress events and allow cancelling. */
+  upload: (path, fields, options = {}) => {
     const form = new FormData();
     Object.entries(fields).forEach(([key, value]) => {
       if (Array.isArray(value)) value.forEach((item) => form.append(`${key}[]`, item));
       else if (value !== undefined && value !== null) form.append(key, value);
     });
-    return request(path, { ...options, method: 'POST', body: form });
+    if (options.onProgress) return uploadWithProgress(path, form, options);
+    return request(path, { signal: options.signal, method: 'POST', body: form });
   },
   /** Downloads an authenticated file (résumé, data export) and saves it in the browser. */
   async download(path, fallbackName) {

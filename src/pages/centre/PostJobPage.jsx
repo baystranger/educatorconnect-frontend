@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Avatar, Button, ChoiceChips, ErrorState, Field, Icon, Input, PageLoader, Select, Switch, Textarea } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useOptions } from '../../hooks/useOptions.js';
 import { createJob, getCentreJob, updateJob } from '../../services/centreApi.js';
@@ -43,6 +44,9 @@ export default function PostJobPage() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(null); // draft | publish
   const [savedAt, setSavedAt] = useState(null);
+  // Snapshot of the form as last loaded or saved; anything different is an unsaved change.
+  const [baseline, setBaseline] = useState(() => JSON.stringify(EMPTY));
+  const dirty = !loading && JSON.stringify(form) !== baseline;
 
   useEffect(() => {
     if (!isEdit) return undefined;
@@ -52,13 +56,15 @@ export default function PostJobPage() {
         if (!active) return;
         const values = payload.data.form;
         setJob(payload.data);
-        setForm({
+        const loaded = {
           ...EMPTY,
           ...Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value ?? EMPTY[key] ?? ''])),
           use_centre_address: values.postal_code === centre?.postal_code && values.city === centre?.city,
           salary_min: values.salary_min ? Number(values.salary_min) : '',
           salary_max: values.salary_max ? Number(values.salary_max) : '',
-        });
+        };
+        setForm(loaded);
+        setBaseline(JSON.stringify(loaded));
         setSavedAt(payload.data.published_at || null);
       })
       .catch((error) => active && setLoadError(error))
@@ -80,7 +86,8 @@ export default function PostJobPage() {
   ], [form, centre]);
   const ready = checks.every(([, done]) => done);
 
-  async function submit(publish) {
+  /** Saves the posting. With `stay` (used by the leave-page dialog) it doesn't navigate afterwards. */
+  async function submit(publish, { stay = false } = {}) {
     setSaving(publish ? 'publish' : 'draft');
     setErrors({});
     const payload = {
@@ -99,17 +106,36 @@ export default function PostJobPage() {
       const response = isEdit && job ? await updateJob(job.id, payload) : await createJob(payload);
       setJob(response.data);
       setSavedAt(new Date().toISOString());
+      setBaseline(JSON.stringify(form));
       toast.success(response.message);
-      if (publish) navigate('/centre/jobs?tab=published');
-      else if (!isEdit) navigate(`/centre/jobs/${response.data.id}/edit`, { replace: true });
+      if (!stay) {
+        guard.release();
+        if (publish) navigate('/centre/jobs?tab=published');
+        else if (!isEdit) navigate(`/centre/jobs/${response.data.id}/edit`, { replace: true });
+      }
+      return true;
     } catch (error) {
       const fields = Object.fromEntries(Object.entries(error.errors || {}).map(([key, value]) => [key, value[0]]));
       setErrors(fields);
       toast.error(fields.publish || Object.values(fields)[0] || error.message);
+      return false;
     } finally {
       setSaving(null);
     }
   }
+
+  // Leaving with edits: a live posting is saved in place; anything else is kept as a draft.
+  const guard = useUnsavedChanges(dirty, {
+    onSave: () => {
+      if (job?.status !== 'published' && !form.title.trim()) {
+        toast.error('Add a job title to save this as a draft.');
+        return Promise.resolve(false);
+      }
+      return submit(job?.status === 'published', { stay: true });
+    },
+    saveLabel: job?.status === 'published' ? 'Save changes & leave' : 'Save draft & leave',
+    message: 'This job posting has changes that haven’t been saved.',
+  });
 
   if (loading) return <PageLoader label="Loading posting…" />;
   if (loadError) return <main className="ec-main"><div className="ec-container"><ErrorState error={loadError} /></div></main>;

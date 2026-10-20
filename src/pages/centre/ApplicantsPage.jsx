@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Avatar, Button, EmptyState, ErrorState, Field, Icon, Input, Modal, PageLoader, Pill, Skeleton, Textarea } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
 import { useResource } from '../../hooks/useResource.js';
 import { downloadApplicantResume, getApplicant, getApplicants, getCentreJobs, messageApplicant, setApplicantStatus } from '../../services/centreApi.js';
@@ -69,6 +70,10 @@ function ApplicantDetail({ applicationId, centre, onChanged }) {
   const threadRef = useRef(null);
 
   useEffect(() => { setPlaying(false); setMessage(''); }, [applicationId]);
+  useUnsavedChanges(Boolean(message.trim()), {
+    message: 'You have an unsent message to this applicant. Leaving will discard it.',
+    onDiscard: () => setMessage(''),
+  });
   useEffect(() => { threadRef.current?.scrollTo(0, threadRef.current.scrollHeight); }, [applicant?.messages?.length]);
 
   if (loading && !applicant) return <><div className="ap-detail"><Skeleton height={60} /><Skeleton height={124} /><Skeleton height={120} /></div><div className="ap-messages"><Skeleton height={300} /></div></>;

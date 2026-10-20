@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useGeolocation } from '../../hooks/useGeolocation.js';
 import { useOptions } from '../../hooks/useOptions.js';
 import { useResource } from '../../hooks/useResource.js';
@@ -44,6 +45,10 @@ function ApplyDialog({ job, user, onClose, onApplied }) {
   const [note, setNote] = useState('');
   const [share, setShare] = useState({ video: true, certifications: true });
   const [state, setState] = useState('review'); // review | sending | done
+  useUnsavedChanges(Boolean(note.trim()) && state !== 'done', {
+    message: 'You wrote a note for this application but haven’t sent it. Leaving will discard it.',
+    onDiscard: () => setNote(''),
+  });
   const [error, setError] = useState('');
 
   async function submit() {
@@ -52,6 +57,7 @@ function ApplyDialog({ job, user, onClose, onApplied }) {
     try {
       await applyToJob(job.id, { coverMessage: note, shareVideo: share.video, shareCertifications: share.certifications });
       setState('done');
+      toast.success('Application sent.');
       onApplied();
     } catch (requestError) {
       setState('review');
@@ -153,6 +159,7 @@ function JobDetail({ slug, listJob, viewer, onBack, onChange }) {
     onChange(job.slug, { is_saved: next });
     try {
       if (next) await saveJob(job.id); else await unsaveJob(job.id);
+      toast.success(next ? 'Job saved.' : 'Removed from saved jobs.');
     } catch (requestError) {
       setData((current) => ({ ...current, is_saved: !next }));
       onChange(job.slug, { is_saved: !next });

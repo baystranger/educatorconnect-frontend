@@ -88,6 +88,14 @@ Zip the backend folder, **excluding**:
 
 **cPanel → Select PHP Version → Extensions**: make sure these are enabled: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `curl`, `zip`.
 
+**cPanel → MultiPHP INI Editor** (or **Select PHP Version → Options**): videos can be up to 25 MB, so allow uploads of that size:
+
+| Setting | Value |
+| --- | --- |
+| `upload_max_filesize` | `30M` |
+| `post_max_size` | `32M` |
+| `max_execution_time` | `120` |
+
 ### 4.2 Database
 
 1. **cPanel → MySQL® Databases**: create a database, e.g. `CPANELUSER_educator`.
