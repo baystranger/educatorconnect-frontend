@@ -27,7 +27,7 @@ export const ROLE_CONFIG = {
       { label: 'Notification settings', to: '/settings?section=notifications' },
       { label: 'Help Centre', to: '/#footer' },
     ],
-    notificationsHref: '/educator/my-jobs',
+    notificationsHref: '/notifications',
   },
   [ROLES.CENTRE]: {
     label: 'Childcare centre account',
@@ -47,7 +47,7 @@ export const ROLE_CONFIG = {
       { label: 'Account settings', to: '/settings' },
       { label: 'Help Centre', to: '/#footer' },
     ],
-    notificationsHref: '/centre/dashboard',
+    notificationsHref: '/notifications',
   },
   [ROLES.PROFESSIONAL]: {
     label: 'Professional account',
@@ -62,7 +62,7 @@ export const ROLE_CONFIG = {
       { label: 'Account settings', to: '/settings' },
       { label: 'Help Centre', to: '/#footer' },
     ],
-    notificationsHref: '/professional',
+    notificationsHref: '/notifications',
   },
   [ROLES.ADMINISTRATOR]: {
     label: 'Administrator',
@@ -75,7 +75,7 @@ export const ROLE_CONFIG = {
     menu: [
       { label: 'Account settings', to: '/settings' },
     ],
-    notificationsHref: '/admin',
+    notificationsHref: '/notifications',
   },
 };
 

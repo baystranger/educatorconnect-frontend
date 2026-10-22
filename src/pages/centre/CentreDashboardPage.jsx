@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Avatar, Button, ErrorState, Icon, PageLoader, Pill } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getCentreDashboard } from '../../services/centreApi.js';
 import { formatDateTime, formatShortDate, formatTime, greeting, monthDay, plural, STATUS_TONES } from '../../utils/format.js';
@@ -14,6 +15,7 @@ export default function CentreDashboardPage() {
   useDocumentTitle('Centre dashboard');
   const { user } = useAuth();
   const { data, loading, error, reload } = useResource((signal) => getCentreDashboard({ signal }), []);
+  useLiveRefresh(reload);
   const [group, setGroup] = useState('all');
 
   if (loading && !data) return <PageLoader label="Loading your dashboard…" />;

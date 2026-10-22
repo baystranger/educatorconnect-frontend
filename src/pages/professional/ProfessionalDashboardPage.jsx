@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Alert, Avatar, Button, EmptyState, ErrorState, Icon, Pill, Skeleton } from '../../components/ui/index.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getMyListings } from '../../services/professionalApi.js';
 import { formatShortDate, greeting, plural } from '../../utils/format.js';
@@ -36,6 +37,7 @@ export default function ProfessionalDashboardPage() {
   useDocumentTitle('My listings');
   const { user } = useAuth();
   const { data, loading, error, reload } = useResource((signal) => getMyListings({ signal }), []);
+  useLiveRefresh(reload);
   const listings = data?.listings || [];
   const claims = (data?.claims || []).filter((claim) => claim.status !== 'approved');
   const inReview = listings.filter((listing) => listing.status === 'pending_review').length;

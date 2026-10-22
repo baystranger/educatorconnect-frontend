@@ -27,7 +27,7 @@ export default function Header() {
   const close = () => setMenuOpen(false);
 
   const accountActions = user ? (
-    <Link className="button button-small" to={homePathFor(user)} onClick={close}>Dashboard</Link>
+    <Link className="button button-small get-started" to={homePathFor(user)} onClick={close}>Dashboard</Link>
   ) : (
     <>
       <Link className="sign-in" to="/signin" onClick={close}>Sign in</Link>

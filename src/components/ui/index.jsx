@@ -72,8 +72,30 @@ export function Field({ label, hint, error, children, className = '' }) {
   );
 }
 
-export function Input({ invalid, className = '', ...props }) {
-  return <input className={`ec-input ${className}`} aria-invalid={invalid ? 'true' : undefined} {...props} />;
+const PICKER_TYPES = new Set(['date', 'datetime-local', 'time', 'month', 'week']);
+
+
+function openPicker(event) {
+  const input = event.currentTarget;
+  if (input.disabled || input.readOnly || typeof input.showPicker !== 'function') return;
+  try {
+    input.showPicker();
+  } catch {
+    
+  }
+}
+
+export function Input({ invalid, className = '', type, onClick, ...props }) {
+  const picker = PICKER_TYPES.has(type);
+  return (
+    <input
+      type={type}
+      className={`ec-input ${picker ? 'ec-input-picker' : ''} ${className}`}
+      aria-invalid={invalid ? 'true' : undefined}
+      onClick={picker ? (event) => { openPicker(event); onClick?.(event); } : onClick}
+      {...props}
+    />
+  );
 }
 
 export function Select({ invalid, options = [], placeholder, className = '', ...props }) {
