@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getFamilies, getFamilyRequest, replyToFamily, setFamilyRequestStatus } from '../../services/centreApi.js';
 import { ageLabel, formatDateTime, timeAgo } from '../../utils/format.js';
@@ -25,6 +26,7 @@ const ACTIONS = {
 function RequestDetail({ id, centreName, onUpdated }) {
   const toast = useToast();
   const { data: request, loading, error, reload, setData } = useResource((signal) => getFamilyRequest(id, { signal }), [id]);
+  useLiveRefresh(reload);
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState(null);
@@ -136,6 +138,7 @@ export default function FamiliesPage() {
   const tab = TABS.some(([key]) => key === params.get('tab')) ? params.get('tab') : 'inquiry';
   const selectedId = Number(params.get('request')) || null;
   const { data: requests, meta, loading, error, reload, setData } = useResource((signal) => getFamilies(tab, { signal }), [tab]);
+  useLiveRefresh(reload);
   const activeId = selectedId || (window.matchMedia('(min-width: 761px)').matches ? requests?.[0]?.id : null);
 
   return (

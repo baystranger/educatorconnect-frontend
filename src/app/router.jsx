@@ -44,6 +44,7 @@ const AdminConsolePage = lazy(() => import('../pages/admin/AdminConsolePage.jsx'
 
 // Any signed-in account
 const SettingsPage = lazy(() => import('../pages/account/SettingsPage.jsx'));
+const ActivityPage = lazy(() => import('../pages/account/ActivityPage.jsx'));
 
 function Root() {
   return (
@@ -135,7 +136,10 @@ export const router = createBrowserRouter([
 
       {
         element: <RequireRole roles={Object.values(ROLES)} />,
-        children: [{ element: <AppLayout />, children: [{ path: '/settings', element: <SettingsPage /> }] }],
+        children: [{ element: <AppLayout />, children: [
+          { path: '/settings', element: <SettingsPage /> },
+          { path: '/notifications', element: <ActivityPage /> },
+        ] }],
       },
 
       { path: '*', element: <NotFoundPage /> },

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { downloadApplicantResume, getApplicant, getApplicants, getCentreJobs, messageApplicant, setApplicantStatus } from '../../services/centreApi.js';
 import { formatDateTime, formatTime, km, relativeDay, STATUS_TONES, toDate } from '../../utils/format.js';
@@ -62,6 +63,7 @@ function InterviewModal({ applicant, defaultLocation, onClose, onSaved }) {
 function ApplicantDetail({ applicationId, centre, onChanged }) {
   const toast = useToast();
   const { data: applicant, loading, error, reload, setData } = useResource((signal) => getApplicant(applicationId, { signal }), [applicationId]);
+  useLiveRefresh(reload);
   const [busy, setBusy] = useState(null);
   const [interviewing, setInterviewing] = useState(false);
   const [message, setMessage] = useState('');
@@ -220,12 +222,14 @@ export default function ApplicantsPage() {
   const centre = user?.childcare_centres?.[0];
   const [params, setParams] = useSearchParams();
   const { data: jobs, loading: jobsLoading, error: jobsError, reload: reloadJobs } = useResource((signal) => getCentreJobs({ tab: 'active' }, { signal }), []);
+  useLiveRefresh(reloadJobs);
   const jobId = Number(params.get('job')) || jobs?.find((job) => job.status === 'published')?.id || jobs?.[0]?.id || null;
   const stage = params.get('status') || '';
   const selectedId = Number(params.get('application')) || null;
   const { data: applicants, meta, loading, error, reload, setData } = useResource(
     (signal) => getApplicants(jobId, stage || undefined, { signal }), [jobId, stage], { enabled: Boolean(jobId) },
   );
+  useLiveRefresh(jobId ? reload : null);
   const activeId = selectedId || (window.matchMedia('(min-width: 761px)').matches ? applicants?.[0]?.id : null);
 
   const update = (changes) => {

@@ -4,6 +4,7 @@ import { Avatar, Button, EmptyState, ErrorState, FilterPills, Icon, Modal, Pill,
 import { useToast } from '../../context/ToastContext.jsx';
 import { useUnsavedChanges } from '../../context/UnsavedChangesContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { getMyApplications, getSavedJobs, replyToCentre, unsaveJob, withdrawApplication } from '../../services/educatorApi.js';
 import { daysUntil, formatDateTime, formatShortDate, km, STATUS_TONES, timeAgo } from '../../utils/format.js';
@@ -39,6 +40,10 @@ function ApplicationRow({ application, open, onToggle, onWithdraw }) {
   const toast = useToast();
   const [reply, setReply] = useState('');
   const [messages, setMessages] = useState(application.messages || []);
+  // A live refresh brings new centre replies; adopt them unless the server copy is behind.
+  useEffect(() => {
+    if (application.messages) setMessages((current) => (application.messages.length >= current.length ? application.messages : current));
+  }, [application.messages]);
   useUnsavedChanges(Boolean(reply.trim()), {
     message: 'You have an unsent reply to a centre. Leaving will discard it.',
     onDiscard: () => setReply(''),
@@ -114,6 +119,7 @@ function ApplicationRow({ application, open, onToggle, onWithdraw }) {
 function SavedJobs({ onCount }) {
   const toast = useToast();
   const { data: jobs, loading, error, reload, setData } = useResource((signal) => getSavedJobs({ signal }), []);
+  useLiveRefresh(reload);
 
   async function remove(job) {
     setData((current) => current.filter((item) => item.id !== job.id));
@@ -171,6 +177,7 @@ export default function MyJobsPage() {
   const filter = FILTERS.some(([key]) => key === params.get('filter')) ? params.get('filter') : 'all';
   const focusId = Number(params.get('application')) || null;
   const { data, meta, loading, error, reload, setData } = useResource((signal) => getMyApplications(filter, { signal }), [filter]);
+  useLiveRefresh(reload);
   const [openId, setOpenId] = useState(focusId);
   const [savedCount, setSavedCount] = useState(null);
   const [confirm, setConfirm] = useState(null);

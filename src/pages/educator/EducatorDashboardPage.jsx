@@ -4,6 +4,7 @@ import { Avatar, Button, ErrorState, Icon, PageLoader, Pill, StepBars, Switch } 
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.js';
 import { useResource } from '../../hooks/useResource.js';
 import { dismissProfileSetup, getEducatorDashboard, saveJob, setPracticumMode, unsaveJob } from '../../services/educatorApi.js';
 import { icsDataUrl } from '../../utils/calendar.js';
@@ -26,6 +27,7 @@ export default function EducatorDashboardPage() {
   const { user, refresh } = useAuth();
   const toast = useToast();
   const { data, loading, error, reload, setData } = useResource((signal) => getEducatorDashboard({ signal }), []);
+  useLiveRefresh(reload);
   const [savingPracticum, setSavingPracticum] = useState(false);
 
   if (loading && !data) return <PageLoader label="Loading your dashboard…" />;

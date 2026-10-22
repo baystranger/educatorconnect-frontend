@@ -10,6 +10,6 @@ export const updateNotificationPreferences = (data) => api.put('/account/notific
 export const downloadMyData = () => api.download('/account/export', 'educator-connect-data.json');
 export const deactivateAccount = (password) => api.post('/account/deactivate', { password, confirm: true });
 
-export const getNotifications = (options) => api.get('/notifications', { per_page: 8 }, options);
+export const getNotifications = (query = {}, options) => api.get('/notifications', { per_page: 8, ...query }, options);
 export const markNotificationRead = (id) => api.post(`/notifications/${id}/read`);
 export const markAllNotificationsRead = () => api.post('/notifications/read-all');

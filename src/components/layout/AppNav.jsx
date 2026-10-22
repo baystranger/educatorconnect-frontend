@@ -2,11 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROLE_CONFIG } from '../../constants/roles.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useToast } from '../../context/ToastContext.jsx';
+import { announceNotifications } from '../../hooks/useLiveRefresh.js';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../../services/accountApi.js';
 import { timeAgo } from '../../utils/format.js';
 import { Icon } from '../ui/index.jsx';
 
-const NOTE_TONES = { purple: 'purple', green: 'green', yellow: 'gold', gold: 'gold' };
+export const NOTE_TONES = { purple: 'purple', green: 'green', yellow: 'gold', gold: 'gold', danger: 'red' };
+const POLL_INTERVAL_MS = 10000;
 
 /** A nav item is active on its own path and any sub-path (e.g. /centre/jobs/new). */
 function isActive(item, pathname) {
@@ -41,20 +44,42 @@ export default function AppNav() {
   const [notes, setNotes] = useState({ items: [], unread: 0, loaded: false });
   const close = useCallback(() => setPanel(null), []);
   const toolsRef = useOutsideClose(panel !== null, close);
+  const toast = useToast();
+  const seenRef = useRef(null); // ids already shown; null until the first load
+  const openNoteRef = useRef(null);
 
   const loadNotes = useCallback(async () => {
     try {
       const payload = await getNotifications();
-      setNotes({ items: payload.data, unread: payload.meta?.unread_count ?? 0, loaded: true });
+      const items = payload.data || [];
+      if (seenRef.current) {
+        const fresh = items.filter((note) => !note.read && !seenRef.current.has(note.id));
+        if (fresh.length) {
+          fresh.slice(0, 3).reverse().forEach((note) => toast.activity(note.title, () => openNoteRef.current?.(note)));
+          announceNotifications(fresh);
+        }
+      } else {
+        seenRef.current = new Set();
+      }
+      items.forEach((note) => seenRef.current.add(note.id));
+      setNotes({ items, unread: payload.meta?.unread_count ?? 0, loaded: true });
     } catch {
       setNotes((current) => ({ ...current, loaded: true }));
     }
-  }, []);
+  }, [toast]);
 
+  // Near real-time: poll while the tab is visible and catch up as soon as it is shown again.
   useEffect(() => {
     loadNotes();
-    const timer = setInterval(loadNotes, 60000);
-    return () => clearInterval(timer);
+    const timer = setInterval(() => { if (!document.hidden) loadNotes(); }, POLL_INTERVAL_MS);
+    const onVisible = () => { if (!document.hidden) loadNotes(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, [loadNotes]);
 
   useEffect(() => {
@@ -74,6 +99,7 @@ export default function AppNav() {
     }
     if (note.href) navigate(note.href);
   }
+  openNoteRef.current = openNote;
 
   async function markAll() {
     setNotes((current) => ({ ...current, unread: 0, items: current.items.map((item) => ({ ...item, read: true })) }));
